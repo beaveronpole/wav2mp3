@@ -7,36 +7,74 @@
 using namespace std;
 
 WavFileReader::WavFileReader(std::string fileName) {
+    parseWAVFile(fileName);
+}
+
+WAVFileDescriptor WavFileReader::parseWAVFile(std::string fileName) {
+    //open file
     FILE* fd;
     fd = fopen(fileName.c_str(), "r");
-    if (fd == NULL){
+    WAVFileDescriptor wav_descr;
+    FourCC fourcc_tmp;
+    uint32_t size_tmp = 0;
+    if (fd == NULL) {
         cout << "File open error, name = " << fileName << endl;
-    } else{ // file open OK
-        fseek(fd, 0, SEEK_END);
-        uint32_t file_size = ftell(fd);
-        fseek(fd, 0, SEEK_SET);
-        this->data_buf = new uint8_t[file_size - sizeof(WAVHeader)];
-        WAVHeader* header = new WAVHeader;
+        return wav_descr;
+    }
+    fseek(fd, 0, SEEK_END);
+    wav_descr.totalFileSize = ftell(fd);
+    fseek(fd, 0, SEEK_SET);
 
-        fread(header, 1, sizeof(WAVHeader), fd);
-        cout << "header->chunkId = " << string((char*)header->chunkId, 4) << endl;
-        cout << "header->chunkSize = " << header->chunkSize << endl;
-        cout << "header->format = " << string((char*)header->format, 4) << endl;
-        cout << "header->subchunk1Id = " << string((char*)header->subchunk1Id, 4) << endl;
-        cout << "header->subchunk1Size = " << header->subchunk1Size << endl;
-        cout << "header->audioFormat = " << header->audioFormat << endl;
-        cout << "header->numChannels = " << header->numChannels << endl;
-        cout << "header->sampleRate = " << header->sampleRate << endl;
-        cout << "header->byteRate = " << header->byteRate << endl;
-        cout << "header->blockAlign = " << header->blockAlign << endl;
-        cout << "header->bitsPerSample = " << header->bitsPerSample << endl;
-        cout << "header->subchunk2Id = " << string((char*)header->subchunk2Id, 4) << endl;
-        cout << "header->subchunk2Size = " << header->subchunk2Size << endl;
+    //check file size
+    if (wav_descr.totalFileSize <= sizeof(WAVFileDescriptor)){
+        cout << "File too small."<<endl;
+        return wav_descr;
+    }
 
-        this->m_header = *header;
-        this->data_size = file_size - sizeof(WAVHeader);
-        fread(this->data_buf, this->data_size, sizeof(uint8_t), fd);
+    // TODO check ALL read returns
+
+    // TODO check if file has enough length every time
+
+    // TODO make simple function for every step
+
+    //check is RIFF
+    fread(&(wav_descr.header.ck_id), 1, sizeof(ChunkID), fd);
+    if (!wav_descr.header.ck_id.isRIFF()){
+        cout << "File is not RIFF." << endl;
+        return wav_descr;
+    }
+
+    //check wave
+    fread(&(wav_descr.header.fmt), 1, sizeof(FileFormat), fd);
+    if (!wav_descr.header.fmt.isWAVE()){
+        cout << "File is not WAVE." << endl;
+        return wav_descr;
+    }
+
+    //check next chunk (could be different)
+    fread(&(fourcc_tmp), 1, sizeof(FourCC), fd);
+    fread(&(size_tmp), 1, sizeof(size_tmp), fd);
+    while(!fourcc_tmp.check("fmt ")){
+        fseek(fd, size_tmp, SEEK_CUR);
+        fread(&(fourcc_tmp), 1, sizeof(FourCC), fd);
+        fread(&(size_tmp), 1, sizeof(size_tmp), fd);
+    }
+
+    //check is PCM
+    fread(&(wav_descr.header.descr), 1, sizeof(WAVEFormatPCM), fd);
+    wav_descr.header.descr.print();
+    if (wav_descr.header.descr.formatTag != WAVE_FORMAT_PCM){
+        cout << "file contains not PCM data." << endl;
+        return wav_descr;
     }
 
 
+//    this->data_buf = new uint8_t[file_size - sizeof(WAVHeader)];
+    //check size, read all into memory
+
+    //check extension
+    //check wave
+    //skip chunks
+    //fill data struct
+    return wav_descr;
 }

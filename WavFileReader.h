@@ -6,12 +6,117 @@
 #define TEST_LAME_WAVFILEREADER_H
 
 
+#include <cstring>
 #include <string>
 #include <cstdio>
 #include <iostream>
 #include <stdint.h>
+#include <map>
 
-// Структура, описывающая заголовок WAV файла.
+#define WAVE_FORMAT_PCM 1
+
+using namespace std;
+
+struct FourCC{
+    uint8_t fourcc[4];
+
+    inline bool check(string str){
+        if (memcmp(str.c_str(), fourcc, 4) == 0){
+            return true;
+        }
+        return false;
+    }
+
+    inline FourCC(){
+        memset(this->fourcc, 0, sizeof(this->fourcc));
+    }
+};
+
+struct ChunkID{
+    FourCC fourcc; //must be RIFF
+    uint32_t size;
+
+    ChunkID():size(0)
+    {}
+
+    inline bool isRIFF(){
+        return fourcc.check("RIFF");
+    }
+};
+
+struct FileFormat{
+    FourCC fourcc; //must be WAVE
+
+    inline bool isWAVE(){
+        return fourcc.check("WAVE");
+    }
+};
+
+// WAVE_FORMAT_PCM
+struct WAVEFormatPCM{
+//    FourCC fourcc; // 'fmt '
+//    uint32_t chunkSize; // size of chunk header
+    uint16_t formatTag; // format category, PCM == 1
+    uint16_t channels; //number of channels
+    uint32_t samplesPerSec; // sampling rate
+    uint32_t avgBytesPerSec; // for buffer estimation
+    uint16_t dataBlockAlign; //data block size
+    uint16_t bitsPerSample; //number of bits per sample
+
+    inline WAVEFormatPCM():
+            formatTag(0),
+            channels(0),
+            samplesPerSec(0),
+            avgBytesPerSec(0),
+            dataBlockAlign(0),
+            bitsPerSample(0)
+    {}
+
+    inline void print(){
+        cout << "WAVEFormatPCM:" << endl;
+        cout << "format tag: " << this->formatTag << endl;
+        cout << "channels: " << this->channels << endl;
+        cout << "samples per sec: " << this->samplesPerSec << endl;
+        cout << "avg bytes per sec: " << this->avgBytesPerSec << endl;
+        cout << "data block align: " << this->dataBlockAlign << endl;
+        cout << "bits per sample: " << this->bitsPerSample << endl;
+    }
+};
+
+struct WaveData{
+    uint8_t chunkName[4]; // data
+    uint32_t size; // data size
+
+    inline WaveData():size(0){
+        memset(this, 0, sizeof(WaveData));
+    }
+};
+
+struct WAVFileHeader{
+    ChunkID ck_id;
+    FileFormat fmt;
+    WAVEFormatPCM descr;
+};
+
+struct WAVFileDescriptor{
+    string fileName;
+    uint32_t totalFileSize;
+    WAVFileHeader header;
+    uint32_t pcmDataSize_bytes;
+    uint8_t* pcmData;
+
+    inline WAVFileDescriptor():
+            fileName(""),
+            totalFileSize(0),
+            pcmDataSize_bytes(0),
+            pcmData(NULL)
+    {}
+
+    inline ~WAVFileDescriptor(){
+        delete[] pcmData;
+    }
+};
+
 struct WAVHeader
 {
     // WAV-формат начинается с RIFF-заголовка:
@@ -77,8 +182,6 @@ struct WAVHeader
 };
 
 
-
-
 class WavFileReader {
 public:
     WavFileReader(std::string fileName);
@@ -87,6 +190,10 @@ public:
     uint32_t data_size;
     inline uint8_t* getData() {return data_buf;}
     inline uint32_t getDataSize() {return data_size;}
+
+
+private:
+    WAVFileDescriptor parseWAVFile(std::string fileName);
 };
 
 
