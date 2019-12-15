@@ -8,8 +8,6 @@
 using namespace std;
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
-
     lame_global_flags *gfp;
     gfp = lame_init();
 

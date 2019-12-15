@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <map>
+#include <vector>
 
 #define WAVE_FORMAT_PCM 1
 
@@ -52,6 +53,7 @@ struct FileFormat{
     }
 };
 
+
 // WAVE_FORMAT_PCM
 struct WAVEFormatPCM{
 //    FourCC fourcc; // 'fmt '
@@ -78,7 +80,7 @@ struct WAVEFormatPCM{
         cout << "channels: " << this->channels << endl;
         cout << "samples per sec: " << this->samplesPerSec << endl;
         cout << "avg bytes per sec: " << this->avgBytesPerSec << endl;
-        cout << "data block align: " << this->dataBlockAlign << endl;
+        cout << "data block align: " << this->dataBlockAlign << " bytes" << endl;
         cout << "bits per sample: " << this->bitsPerSample << endl;
     }
 };
@@ -104,12 +106,18 @@ struct WAVFileDescriptor{
     WAVFileHeader header;
     uint32_t pcmDataSize_bytes;
     uint8_t* pcmData;
+    uint32_t samplesPerChannel;
+    uint32_t sampleSize_bytes;
+    FILE* fd;
 
     inline WAVFileDescriptor():
             fileName(""),
             totalFileSize(0),
             pcmDataSize_bytes(0),
-            pcmData(NULL)
+            pcmData(NULL),
+            samplesPerChannel(0),
+            sampleSize_bytes(0),
+            fd(NULL)
     {}
 
     inline ~WAVFileDescriptor(){
@@ -194,6 +202,10 @@ public:
 
 private:
     WAVFileDescriptor parseWAVFile(std::string fileName);
+    void readData(WAVFileDescriptor* decr);
+
+    vector<int32_t> buf_pcm32_l;
+    vector<int32_t> buf_pcm32_r;
 };
 
 
