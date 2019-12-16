@@ -13,19 +13,17 @@
 #include <stdint.h>
 #include <map>
 #include <vector>
+#include <cerrno>
 
-#define WAVE_FORMAT_PCM 1
+#define WAVE_FORMAT_PCM 1 //work only with simple PCM stereo data, as it is a test task
 
 using namespace std;
 
 struct FourCC{
     uint8_t fourcc[4];
 
-    inline bool check(string str){
-        if (memcmp(str.c_str(), fourcc, 4) == 0){
-            return true;
-        }
-        return false;
+    inline bool check(const string& str){
+        return memcmp(str.c_str(), fourcc, 4) == 0;
     }
 
     inline FourCC(){
@@ -33,31 +31,21 @@ struct FourCC{
     }
 };
 
-struct ChunkID{
+struct ChunkHeader{
     FourCC fourcc; //must be RIFF
     uint32_t size;
 
-    ChunkID():size(0)
+    ChunkHeader(): size(0)
     {}
-
-    inline bool isRIFF(){
-        return fourcc.check("RIFF");
-    }
 };
 
 struct FileFormat{
     FourCC fourcc; //must be WAVE
-
-    inline bool isWAVE(){
-        return fourcc.check("WAVE");
-    }
 };
 
 
-// WAVE_FORMAT_PCM
+// WAVE_FORMAT_PCM 'fmt '
 struct WAVEFormatPCM{
-//    FourCC fourcc; // 'fmt '
-//    uint32_t chunkSize; // size of chunk header
     uint16_t formatTag; // format category, PCM == 1
     uint16_t channels; //number of channels
     uint32_t samplesPerSec; // sampling rate
@@ -95,9 +83,11 @@ struct WaveData{
 };
 
 struct WAVFileHeader{
-    ChunkID ck_id;
-    FileFormat fmt;
-    WAVEFormatPCM descr;
+    ChunkHeader ck_id; // RIFF
+    FileFormat fmt; // WAVE
+    ChunkHeader ck_fmt; // fmt
+    WAVEFormatPCM descr; // fmt content
+    ChunkHeader ck_data; // data chunk
 };
 
 struct WAVFileDescriptor{
@@ -105,95 +95,27 @@ struct WAVFileDescriptor{
     uint32_t totalFileSize;
     WAVFileHeader header;
     uint32_t pcmDataSize_bytes;
-    uint8_t* pcmData;
     uint32_t samplesPerChannel;
     uint32_t sampleSize_bytes;
+    bool hasPCMData;
+    bool hasData;
     FILE* fd;
 
     inline WAVFileDescriptor():
             fileName(""),
             totalFileSize(0),
             pcmDataSize_bytes(0),
-            pcmData(NULL),
             samplesPerChannel(0),
             sampleSize_bytes(0),
+            hasPCMData(false),
+            hasData(false),
             fd(NULL)
     {}
-
-    inline ~WAVFileDescriptor(){
-        delete[] pcmData;
-    }
 };
-
-struct WAVHeader
-{
-    // WAV-формат начинается с RIFF-заголовка:
-
-    // Содержит символы "RIFF" в ASCII кодировке
-    // (0x52494646 в big-endian представлении)
-    uint8_t chunkId[4];
-
-    // 36 + subchunk2Size, или более точно:
-    // 4 + (8 + subchunk1Size) + (8 + subchunk2Size)
-    // Это оставшийся размер цепочки, начиная с этой позиции.
-    // Иначе говоря, это размер файла - 8, то есть,
-    // исключены поля chunkId и chunkSize.
-    uint32_t chunkSize;
-
-    // Содержит символы "WAVE"
-    // (0x57415645 в big-endian представлении)
-    uint8_t format[4];
-
-    // Формат "WAVE" состоит из двух подцепочек: "fmt " и "data":
-    // Подцепочка "fmt " описывает формат звуковых данных:
-
-    // Содержит символы "fmt "
-    // (0x666d7420 в big-endian представлении)
-    uint8_t subchunk1Id[4];
-
-    // 16 для формата PCM.
-    // Это оставшийся размер подцепочки, начиная с этой позиции.
-    uint32_t subchunk1Size;
-
-    // Аудио формат, полный список можно получить здесь http://audiocoding.ru/wav_formats.txt
-    // Для PCM = 1 (то есть, Линейное квантование).
-    // Значения, отличающиеся от 1, обозначают некоторый формат сжатия.
-    uint16_t audioFormat;
-
-    // Количество каналов. Моно = 1, Стерео = 2 и т.д.
-    uint16_t numChannels;
-
-    // Частота дискретизации. 8000 Гц, 44100 Гц и т.д.
-    uint32_t sampleRate;
-
-    // sampleRate * numChannels * bitsPerSample/8
-    uint32_t byteRate;
-
-    // numChannels * bitsPerSample/8
-    // Количество байт для одного сэмпла, включая все каналы.
-    uint16_t blockAlign;
-
-    // Так называемая "глубиная" или точность звучания. 8 бит, 16 бит и т.д.
-    uint16_t bitsPerSample;
-
-    // Подцепочка "data" содержит аудио-данные и их размер.
-
-    // Содержит символы "data"
-    // (0x64617461 в big-endian представлении)
-    uint8_t subchunk2Id[4];
-
-    // numSamples * numChannels * bitsPerSample/8
-    // Количество байт в области данных.
-    uint32_t subchunk2Size;
-
-    // Далее следуют непосредственно Wav данные.
-};
-
 
 class WavFileReader {
 public:
     WavFileReader(std::string fileName);
-    WAVHeader m_header;
     uint8_t* data_buf;
     uint32_t data_size;
     inline uint8_t* getData() {return data_buf;}
@@ -201,9 +123,40 @@ public:
 
 
 private:
-    WAVFileDescriptor parseWAVFile(std::string fileName);
+    void parseWAVFile(const string &fileName);
     void readData(WAVFileDescriptor* decr);
 
+    // check if file has extension ".wav" or ".wave"
+    bool isWAVextension(const string &fileName);
+
+    // function tries to open file, checks extension WAV
+    bool openWavFile(const string &fileName);
+
+    // function returns total file size of given file descriptor
+    uint32_t getFileSize(FILE* fd);
+
+    // read first chunk of file and check if it is RIFF
+    // fills part of wav file descriptor
+    bool isRIFFFile();
+
+    //checks if file has WAVE data
+    bool isWAVEFile();
+
+    //gets format description for PCM data
+    void getFormatDescription();
+
+    //read signal data with silence blocks
+    void goToNextDataBegin();
+
+    //get bytes per sample (12bit sample-> 2 bytes)
+    uint32_t getBytesPerSample();
+
+    //
+    uint32_t getSamplesPerChannel();
+
+    bool hasFileEnoughDataForRead(size_t dataSize);
+
+    WAVFileDescriptor m_wavFileDescr;
     vector<int32_t> buf_pcm32_l;
     vector<int32_t> buf_pcm32_r;
 };

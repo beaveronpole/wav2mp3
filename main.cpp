@@ -27,7 +27,7 @@ int main() {
 //    WavFileReader reader("./testcase.wav");
     WavFileReader reader("./file_example_WAV_1MG.wav");
 
-    uint32_t mp3buffer_size = 1.25*(reader.m_header.subchunk2Size/2) + 7200;
+//    uint32_t mp3buffer_size = 1.25*(reader.m_header.subchunk2Size/2) + 7200;
 
 //
 //

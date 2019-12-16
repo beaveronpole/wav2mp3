@@ -8,60 +8,66 @@
 using namespace std;
 
 WavFileReader::WavFileReader(std::string fileName) {
-    WAVFileDescriptor descr = parseWAVFile(fileName);
-    this->readData(&descr);
+    parseWAVFile(fileName);
+    cout << "Samples per channel = " << m_wavFileDescr.samplesPerChannel << endl;
+    this->readData(&m_wavFileDescr);
 
-    uint32_t mp3buffer_size_bytes = 1.25*descr.samplesPerChannel + 7200;
+    uint32_t mp3buffer_size_bytes = 1.25 * m_wavFileDescr.samplesPerChannel + 7200;
     uint8_t * mp3buffer = new uint8_t[mp3buffer_size_bytes];
 
     lame_global_flags *gfp;
     gfp = lame_init();
 
-    lame_set_num_channels(gfp,descr.header.descr.channels);
-    lame_set_in_samplerate(gfp,descr.header.descr.samplesPerSec);
-    lame_set_brate(gfp,128);
+    lame_set_num_channels(gfp, m_wavFileDescr.header.descr.channels);
+    lame_set_in_samplerate(gfp, m_wavFileDescr.header.descr.samplesPerSec);
+    lame_set_brate(gfp,256);
     lame_set_mode(gfp, static_cast<MPEG_mode>(1));
     lame_set_quality(gfp,5);   /* 2=high  5 = medium  7=low */
     int ret_code = lame_init_params(gfp);
 
     cout << "Ret code = " << ret_code << endl;
+    FILE * out = fopen("./out.mp3", "w");
+
+    cout << "----------------" << endl;
 
     int return_encode = lame_encode_buffer_int(gfp,
                                                (int*)this->buf_pcm32_l.data(),
                                                (int*)this->buf_pcm32_r.data(),
-                                               (int)descr.samplesPerChannel,
+                                               (int)m_wavFileDescr.samplesPerChannel,
                                                mp3buffer,
                                                (int)mp3buffer_size_bytes);
     cout << "Encode return " << return_encode << endl;
-
-    FILE * out = fopen("./out.mp3", "w");
     fwrite(mp3buffer, return_encode, 1, out);
+
+    int return_flush = lame_encode_flush(
+            gfp,    /* global context handle                 */
+            mp3buffer, /* pointer to encoded MP3 stream         */
+            (int)mp3buffer_size_bytes);  /* number of valid octets in this stream */
+    if (return_flush > 0) {
+        fwrite(mp3buffer, return_flush, 1, out);
+    }
+    cout << "Encode flush return " << return_flush << endl;
     fclose(out);
-    fclose(descr.fd);
+    fclose(m_wavFileDescr.fd);
 
 
 }
 
-WAVFileDescriptor WavFileReader::parseWAVFile(std::string fileName) {
-    //open file
-    FILE* fd;
-    fd = fopen(fileName.c_str(), "r");
-    WAVFileDescriptor wav_descr;
-    FourCC fourcc_tmp;
-    uint32_t size_tmp = 0;
-    if (fd == NULL) {
-        cout << "File open error, name = " << fileName << endl;
-        return wav_descr;
+void WavFileReader::parseWAVFile(const string &fileName) {
+    if (!isWAVextension(fileName)) return;
+    if (!openWavFile(fileName)) return;
+    m_wavFileDescr.totalFileSize = getFileSize(m_wavFileDescr.fd);
+    if (m_wavFileDescr.totalFileSize == 0){
+        fclose(m_wavFileDescr.fd);
+        return;
     }
-    fseek(fd, 0, SEEK_END);
-    wav_descr.totalFileSize = ftell(fd);
-    fseek(fd, 0, SEEK_SET);
+    if (!isRIFFFile()) return;
+    if (!isWAVEFile()) return;
+    getFormatDescription();
+    if (!m_wavFileDescr.hasPCMData) return;
+    goToNextDataBegin();
+    if (!m_wavFileDescr.hasData) return;
 
-    //check file size
-    if (wav_descr.totalFileSize <= sizeof(WAVFileDescriptor)){
-        cout << "File too small."<<endl;
-        return wav_descr;
-    }
 
     // TODO check ALL read returns
 
@@ -69,63 +75,9 @@ WAVFileDescriptor WavFileReader::parseWAVFile(std::string fileName) {
 
     // TODO make simple function for every step
 
-    //check is RIFF
-    fread(&(wav_descr.header.ck_id), 1, sizeof(ChunkID), fd);
-    if (!wav_descr.header.ck_id.isRIFF()){
-        cout << "File is not RIFF." << endl;
-        return wav_descr;
-    }
+    m_wavFileDescr.sampleSize_bytes = getBytesPerSample();
+    m_wavFileDescr.samplesPerChannel = getSamplesPerChannel();
 
-    //check wave
-    fread(&(wav_descr.header.fmt), 1, sizeof(FileFormat), fd);
-    if (!wav_descr.header.fmt.isWAVE()){
-        cout << "File is not WAVE." << endl;
-        return wav_descr;
-    }
-
-    //check next chunk (could be different)
-    fread(&(fourcc_tmp), 1, sizeof(FourCC), fd);
-    fread(&(size_tmp), 1, sizeof(size_tmp), fd);
-    while(!fourcc_tmp.check("fmt ")){
-        fseek(fd, size_tmp, SEEK_CUR);
-        fread(&(fourcc_tmp), 1, sizeof(FourCC), fd);
-        fread(&(size_tmp), 1, sizeof(size_tmp), fd);
-    }
-
-    //check is PCM
-    fread(&(wav_descr.header.descr), 1, sizeof(WAVEFormatPCM), fd);
-    wav_descr.header.descr.print();
-    if (wav_descr.header.descr.formatTag != WAVE_FORMAT_PCM){
-        cout << "file contains not PCM data." << endl;
-        return wav_descr;
-    }
-
-    // read data chunk header
-    fread(&(fourcc_tmp), 1, sizeof(FourCC), fd);
-    fread(&(size_tmp), 1, sizeof(size_tmp), fd);
-    while(!fourcc_tmp.check("data")){
-        fseek(fd, size_tmp, SEEK_CUR);
-        fread(&(fourcc_tmp), 1, sizeof(FourCC), fd);
-        fread(&(size_tmp), 1, sizeof(size_tmp), fd);
-    }
-    wav_descr.pcmDataSize_bytes = size_tmp;
-
-    cout << "Data size = " << size_tmp << endl;
-
-    uint32_t sampleSize_bytes  = 8;
-    if (wav_descr.header.descr.bitsPerSample <= 8){
-        sampleSize_bytes = 1;
-    }
-    else if (wav_descr.header.descr.bitsPerSample <= 16){
-        sampleSize_bytes = 2;
-    }
-    else if (wav_descr.header.descr.bitsPerSample <= 32){
-        sampleSize_bytes = 4;
-    }
-    wav_descr.sampleSize_bytes = sampleSize_bytes;
-    wav_descr.samplesPerChannel = wav_descr.pcmDataSize_bytes/wav_descr.header.descr.channels/sampleSize_bytes;
-
-    wav_descr.fd = fd;
 
     // we are at data begin
     // read all data
@@ -144,7 +96,7 @@ WAVFileDescriptor WavFileReader::parseWAVFile(std::string fileName) {
     //check wave
     //skip chunks
     //fill data struct
-    return wav_descr;
+    return;
 }
 
 void WavFileReader::readData(WAVFileDescriptor* descr) {
@@ -152,6 +104,9 @@ void WavFileReader::readData(WAVFileDescriptor* descr) {
     buf_pcm32_l.reserve(descr->samplesPerChannel);
     buf_pcm32_r.reserve(descr->samplesPerChannel);
 
+    //TODO make for 8bit unsigned data
+    //TODO try to read silence
+    //TODO check file size and data size
     while(true){
         int status;
         uint32_t tmp = 0x0;
@@ -164,15 +119,185 @@ void WavFileReader::readData(WAVFileDescriptor* descr) {
             if (status <= 0){
                 break;
             }
-            buf_pcm32_l.push_back((INT32_MAX/INT16_MAX)*tmp);
+            //TODO make shift instead of this
+//            buf_pcm32_l.push_back((INT32_MAX/INT16_MAX)*tmp);
+            buf_pcm32_l.push_back(tmp<<16);
 
             status = fread(&tmp, descr->sampleSize_bytes, 1, descr->fd);
             if (status <= 0){
                 break;
             }
-            buf_pcm32_r.push_back(tmp);
+//            buf_pcm32_r.push_back((INT32_MAX/INT16_MAX)*tmp);
+            buf_pcm32_r.push_back(tmp<<16);
         }
 
     }
 
+}
+
+bool WavFileReader::isWAVextension(const string &fileName) {
+    if (fileName.empty())
+        return false;
+    int32_t last_separator_pos = fileName.find_last_of(PATH_SEPARATOR);
+    int32_t last_dot_pos = fileName.find_last_of('.');
+    if (last_dot_pos - last_separator_pos <= 1){
+        return false;
+    }
+    string extension = fileName.substr(last_dot_pos + 1);
+    if (extension.empty())
+        return false;
+    return extension == "wav" || extension == "wave";
+}
+
+bool WavFileReader::openWavFile(const string &fileName) {
+    FILE* fd;
+    fd = fopen(fileName.c_str(), "r");
+    if (fd == NULL){
+        strerror(errno);
+        return false;
+    }
+    m_wavFileDescr.fd = fd;
+    return true;
+}
+
+uint32_t WavFileReader::getFileSize(FILE *fd) {
+    // TODO is return 0 close file
+    if (fd == NULL){
+        cerr << "Error. File descriptor is not open." << endl;
+        return 0;
+    }
+    int32_t cur_pos = ftell(fd); //save the position on enter
+    if (cur_pos < 0){
+        strerror(errno);
+        return 0;
+    }
+    int32_t status = fseek(fd, 0, SEEK_END);
+    if (status != 0){
+        strerror(errno);
+        return 0;
+    }
+    int32_t fileSize = ftell(fd);
+    if (fileSize < 0){
+        strerror(errno);
+        return 0;
+    }
+    status = fseek(fd, cur_pos, SEEK_SET); //set back to position on enter
+    if (status != 0){
+        strerror(errno);
+        return 0;
+    }
+    return fileSize;
+}
+
+bool WavFileReader::isRIFFFile() {
+    //TODO check global status WAV
+    if (!hasFileEnoughDataForRead(sizeof(ChunkHeader))){
+        cerr << "File is too small!" << endl;
+        return false;
+    }
+    if (fread(&(m_wavFileDescr.header.ck_id), sizeof(ChunkHeader), 1, m_wavFileDescr.fd) != 1){
+        cerr << "Error on reading main chunk ID RIFF" << endl;
+        return false;
+    }
+    if (!m_wavFileDescr.header.ck_id.fourcc.check("RIFF")){
+        cout << "File is not RIFF." << endl;
+        return false;
+    }
+    return true;
+}
+
+bool WavFileReader::isWAVEFile() {
+    //TODO check global status WAV
+    if (!hasFileEnoughDataForRead(sizeof(FileFormat)) ){
+        cerr << "Error on reading FORMAT FourCC, file is too small." << endl;
+        return false;
+    }
+
+    int readStatus = fread(&(m_wavFileDescr.header.fmt), sizeof(FileFormat), 1, m_wavFileDescr.fd);
+    if (readStatus < 1 || !m_wavFileDescr.header.fmt.fourcc.check("WAVE")){
+        cerr << "Error on reading file format or file format is not WAVE." << endl;
+        return false;
+    }
+    return true;
+}
+
+void WavFileReader::getFormatDescription() {
+    ChunkHeader chunkHeaderTmp;
+    do{
+        if (!hasFileEnoughDataForRead(sizeof(ChunkHeader)) ){
+            cerr << "Error on reading format description, file is too small." << endl;
+            return;
+        }
+        size_t status = fread(&(chunkHeaderTmp), sizeof(ChunkHeader), 1, m_wavFileDescr.fd);
+        if (status != 1){
+            cerr << "Error on reading file format data" << endl;
+            return;
+        }
+    } while(!chunkHeaderTmp.fourcc.check("fmt "));
+
+    m_wavFileDescr.header.ck_fmt = chunkHeaderTmp;
+
+    if (!hasFileEnoughDataForRead(sizeof(WAVEFormatPCM)) ){
+        cerr << "Error on reading format description, file is too small." << endl;
+        return;
+    }
+    size_t status = fread(&(m_wavFileDescr.header.descr), sizeof(WAVEFormatPCM), 1, m_wavFileDescr.fd);
+    if (status != 1){
+        cerr << "Error on reading format description." << endl;
+        return;
+    }
+    m_wavFileDescr.header.descr.print();
+    if (m_wavFileDescr.header.descr.formatTag != WAVE_FORMAT_PCM){
+        cout << "File contains not PCM data." << endl;
+        return;
+    }
+    m_wavFileDescr.hasPCMData = true;
+}
+
+bool WavFileReader::hasFileEnoughDataForRead(size_t dataSize) {
+    int32_t filePos = ftell(m_wavFileDescr.fd);
+    return !(filePos < 0 || (m_wavFileDescr.totalFileSize - filePos) < dataSize);
+}
+
+void WavFileReader::goToNextDataBegin() {
+    ChunkHeader chunkHeaderTmp;
+    do{
+        if (!hasFileEnoughDataForRead(sizeof(ChunkHeader)) ){
+            cerr << "Error on reading format description, file is too small." << endl;
+            return;
+        }
+        size_t status = fread(&(chunkHeaderTmp), sizeof(ChunkHeader), 1, m_wavFileDescr.fd);
+        if (status != 1){
+            cerr << "Error on reading file format data" << endl;
+            return;
+        }
+    } while(!chunkHeaderTmp.fourcc.check("data"));
+    //TODO data chunk may be bigger then file size
+    int32_t filePos = ftell(m_wavFileDescr.fd);
+    if (filePos < 0){
+        cerr << "Error on reading data chunk description" << endl;
+    }
+    int32_t remainData = m_wavFileDescr.totalFileSize - filePos;
+    m_wavFileDescr.hasData = true;
+    m_wavFileDescr.header.ck_data = chunkHeaderTmp;
+    m_wavFileDescr.pcmDataSize_bytes = m_wavFileDescr.header.ck_data.size > remainData ? remainData : m_wavFileDescr.header.ck_data.size;
+}
+
+uint32_t WavFileReader::getBytesPerSample() {
+    uint32_t sampleSize_bytes  = 8;
+    if (m_wavFileDescr.header.descr.bitsPerSample <= 8){
+        sampleSize_bytes = 1;
+    }
+    else if (m_wavFileDescr.header.descr.bitsPerSample <= 16){
+        sampleSize_bytes = 2;
+    }
+    else if (m_wavFileDescr.header.descr.bitsPerSample <= 32){
+        sampleSize_bytes = 4;
+    }
+    return sampleSize_bytes;
+}
+
+uint32_t WavFileReader::getSamplesPerChannel() {
+    //TODO check channels is ZERO
+    return m_wavFileDescr.pcmDataSize_bytes / m_wavFileDescr.header.descr.channels / m_wavFileDescr.sampleSize_bytes;
 }
