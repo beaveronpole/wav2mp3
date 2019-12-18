@@ -10,7 +10,12 @@ using namespace std;
 WavFileReader::WavFileReader(std::string fileName) {
     parseWAVFile(fileName);
     cout << "Samples per channel = " << m_wavFileDescr.samplesPerChannel << endl;
-    this->readDataChunk(&m_wavFileDescr);
+//    this->readDataChunk(&m_wavFileDescr);
+
+    BaseWaveDataReader* datareader = WaveDataReaderCreator::createDataReader(m_wavFileDescr.header.descr.bitsPerSample, m_wavFileDescr.hasFloatFormat);
+    datareader->init(m_wavFileDescr.fd, m_wavFileDescr.pcmDataSize_bytes, m_wavFileDescr.header.descr.channels, m_wavFileDescr.header.descr.bitsPerSample);
+    vector< vector<int32_t>* >* signalData = datareader->getData();
+
 
     uint32_t mp3buffer_size_bytes = 1.25 * m_wavFileDescr.samplesPerChannel + 7200;
     uint8_t * mp3buffer = new uint8_t[mp3buffer_size_bytes];
@@ -31,8 +36,8 @@ WavFileReader::WavFileReader(std::string fileName) {
     cout << "----------------" << endl;
 
     int return_encode = lame_encode_buffer_int(gfp,
-                                               (int*)this->buf_pcm32_l.data(),
-                                               (int*)this->buf_pcm32_r.data(),
+                                               signalData->at(0)->data(),
+                                               (signalData->size()>1?signalData->at(1)->data():signalData->at(0)->data()),
                                                (int)m_wavFileDescr.samplesPerChannel,
                                                mp3buffer,
                                                (int)mp3buffer_size_bytes);
@@ -58,6 +63,7 @@ void WavFileReader::parseWAVFile(const string &fileName) {
     if (!openWavFile(fileName)) return;
     m_wavFileDescr.totalFileSize = getFileSize(m_wavFileDescr.fd);
     if (m_wavFileDescr.totalFileSize == 0){
+        cerr << "Error. File size is zero" << endl;
         fclose(m_wavFileDescr.fd);
         return;
     }
@@ -101,36 +107,43 @@ void WavFileReader::parseWAVFile(const string &fileName) {
 
 void WavFileReader::readDataChunk(WAVFileDescriptor* decr) {
 
-    buf_pcm32_l.reserve(decr->samplesPerChannel);
-    buf_pcm32_r.reserve(decr->samplesPerChannel);
+    buf_pcm32[LEFT].reserve(decr->samplesPerChannel);
+    buf_pcm32[RIGHT].reserve(decr->samplesPerChannel);
 
     //TODO make for 8bit unsigned data
     //TODO try to read silence
     //TODO check file size and data size
     //TODO skip channels more than 2
+    //TODO check if EOF
+    //TODO think about FLOAT
+    //TODO think about stream encoding
+    uint8_t shift_value = 32 - decr->header.descr.bitsPerSample;
     while(true){
         int status;
-        uint32_t tmp = 0x0;
-        if (decr->header.descr.channels == 2){
-            if (feof(decr->fd)){
-                break;
-            }
+        int32_t tmp_sample = 0;
 
-            status = fread(&tmp, decr->sampleSize_bytes, 1, decr->fd);
-            if (status <= 0){
-                break;
+        for (int channel_number = 0; channel_number < decr->header.descr.channels; channel_number++) {
+            //read sample
+            status = fread(&tmp_sample, decr->sampleSize_bytes, 1, decr->fd);
+            if (status != 1) {
+                cerr << "Error on reading data chunk." << endl;
+                return;
             }
-            buf_pcm32_l.push_back(tmp<<16);
-
-            status = fread(&tmp, decr->sampleSize_bytes, 1, decr->fd);
-            if (status <= 0){
-                break;
+            // if channel more than channels- skip
+            if (channel_number > 2) {
+                continue;
             }
-            buf_pcm32_r.push_back(tmp<<16);
+            // else put data to array
+            if (decr->header.descr.bitsPerSample > 8) { //signed value
+                buf_pcm32[channel_number].push_back(tmp_sample << shift_value);
+            }
+            else{ //unsigned value
+//                buf_pcm32[channel_number].push_back((~tmp_sample+1) << shift_value);
+                int32_t s = 128;
+                buf_pcm32[channel_number].push_back( ((int32_t)(*(uint8_t*)(&tmp_sample))-s) << shift_value);
+            }
         }
-
     }
-
 }
 
 bool WavFileReader::isWAVextension(const string &fileName) {
@@ -245,11 +258,14 @@ void WavFileReader::getFormatDescription() {
         return;
     }
     m_wavFileDescr.header.descr.print();
-    if (m_wavFileDescr.header.descr.formatTag != WAVE_FORMAT_PCM){
+    if (m_wavFileDescr.header.descr.formatTag != WAVE_FORMAT_PCM && m_wavFileDescr.header.descr.formatTag != WAVE_FORMAT_PCM_FLOAT){
         cout << "File contains not PCM data." << endl;
         return;
     }
     m_wavFileDescr.hasPCMData = true;
+    if (m_wavFileDescr.header.descr.formatTag == WAVE_FORMAT_PCM_FLOAT){
+        m_wavFileDescr.hasFloatFormat = true;
+    }
 }
 
 bool WavFileReader::hasFileEnoughDataForRead(size_t dataSize) {

@@ -15,7 +15,10 @@
 #include <vector>
 #include <cerrno>
 
+#include "datareaders/datareaders.h"
+
 #define WAVE_FORMAT_PCM 1 //work only with simple PCM stereo data, as it is a test task
+#define WAVE_FORMAT_PCM_FLOAT 3
 
 using namespace std;
 
@@ -98,6 +101,7 @@ struct WAVFileDescriptor{
     uint32_t samplesPerChannel;
     uint32_t sampleSize_bytes;
     bool hasPCMData;
+    bool hasFloatFormat;
     bool hasData;
     FILE* fd;
 
@@ -108,6 +112,7 @@ struct WAVFileDescriptor{
             samplesPerChannel(0),
             sampleSize_bytes(0),
             hasPCMData(false),
+            hasFloatFormat(false),
             hasData(false),
             fd(NULL)
     {}
@@ -157,8 +162,8 @@ private:
     bool hasFileEnoughDataForRead(size_t dataSize);
 
     WAVFileDescriptor m_wavFileDescr;
-    vector<int32_t> buf_pcm32_l;
-    vector<int32_t> buf_pcm32_r;
+    enum CHANNEL {LEFT, RIGHT};
+    vector<int32_t> buf_pcm32[2];
 };
 
 
