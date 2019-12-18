@@ -1,10 +1,14 @@
 # Brief
 This is a project for task: convert WAV files to MP3 files in multithread manner
 
+# Result
+No result yet! It is in progress.
+
 # Plan
 
 1. read about wav files format
-..* make wav simple parser
+1.1 make wav simple parser
+1.2 add wav file readers
 2. read about mp3 file format
 3. try to use lame frontend
 4. try to understand how does lame frontend work
