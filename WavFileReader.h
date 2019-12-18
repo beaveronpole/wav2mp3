@@ -124,7 +124,7 @@ public:
 
 private:
     void parseWAVFile(const string &fileName);
-    void readData(WAVFileDescriptor* decr);
+    void readDataChunk(WAVFileDescriptor* decr);
 
     // check if file has extension ".wav" or ".wave"
     bool isWAVextension(const string &fileName);

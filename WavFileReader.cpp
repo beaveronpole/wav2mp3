@@ -10,7 +10,7 @@ using namespace std;
 WavFileReader::WavFileReader(std::string fileName) {
     parseWAVFile(fileName);
     cout << "Samples per channel = " << m_wavFileDescr.samplesPerChannel << endl;
-    this->readData(&m_wavFileDescr);
+    this->readDataChunk(&m_wavFileDescr);
 
     uint32_t mp3buffer_size_bytes = 1.25 * m_wavFileDescr.samplesPerChannel + 7200;
     uint8_t * mp3buffer = new uint8_t[mp3buffer_size_bytes];
@@ -99,35 +99,33 @@ void WavFileReader::parseWAVFile(const string &fileName) {
     return;
 }
 
-void WavFileReader::readData(WAVFileDescriptor* descr) {
+void WavFileReader::readDataChunk(WAVFileDescriptor* decr) {
 
-    buf_pcm32_l.reserve(descr->samplesPerChannel);
-    buf_pcm32_r.reserve(descr->samplesPerChannel);
+    buf_pcm32_l.reserve(decr->samplesPerChannel);
+    buf_pcm32_r.reserve(decr->samplesPerChannel);
 
     //TODO make for 8bit unsigned data
     //TODO try to read silence
     //TODO check file size and data size
+    //TODO skip channels more than 2
     while(true){
         int status;
         uint32_t tmp = 0x0;
-        if (descr->header.descr.channels == 2){
-            if (feof(descr->fd)){
+        if (decr->header.descr.channels == 2){
+            if (feof(decr->fd)){
                 break;
             }
 
-            status = fread(&tmp, descr->sampleSize_bytes, 1, descr->fd);
+            status = fread(&tmp, decr->sampleSize_bytes, 1, decr->fd);
             if (status <= 0){
                 break;
             }
-            //TODO make shift instead of this
-//            buf_pcm32_l.push_back((INT32_MAX/INT16_MAX)*tmp);
             buf_pcm32_l.push_back(tmp<<16);
 
-            status = fread(&tmp, descr->sampleSize_bytes, 1, descr->fd);
+            status = fread(&tmp, decr->sampleSize_bytes, 1, decr->fd);
             if (status <= 0){
                 break;
             }
-//            buf_pcm32_r.push_back((INT32_MAX/INT16_MAX)*tmp);
             buf_pcm32_r.push_back(tmp<<16);
         }
 
@@ -273,6 +271,7 @@ void WavFileReader::goToNextDataBegin() {
         }
     } while(!chunkHeaderTmp.fourcc.check("data"));
     //TODO data chunk may be bigger then file size
+    //TODO check is silence block
     int32_t filePos = ftell(m_wavFileDescr.fd);
     if (filePos < 0){
         cerr << "Error on reading data chunk description" << endl;
