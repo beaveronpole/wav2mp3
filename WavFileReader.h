@@ -46,9 +46,7 @@ struct FileFormat{
     FourCC fourcc; //must be WAVE
 };
 
-//TODO move inline functions to CPP
-
-// 'fmt '
+// 'fmt ' for PCM and FLOAT
 struct WAVEFormat{
     uint16_t formatTag; // format category
     uint16_t channels; //number of channels
@@ -82,15 +80,6 @@ struct WAVEFormat{
 };
 
 
-struct WaveData{
-    uint8_t chunkName[4]; // data
-    uint32_t size; // data size
-
-    inline WaveData():size(0){
-        memset(this, 0, sizeof(WaveData));
-    }
-};
-
 struct WAVFileHeader{
     ChunkHeader ck_id; // RIFF
     FileFormat fmt; // WAVE
@@ -106,7 +95,6 @@ struct WAVFileDescriptor{
     string fileName;
     uint32_t totalFileSize;
     WAVFileHeader header;
-//    uint32_t pcmDataSize_bytes;
     uint32_t samplesPerChannel;
     uint32_t sampleSize_bytes;
     bool hasPCMData;
@@ -116,7 +104,6 @@ struct WAVFileDescriptor{
     inline WAVFileDescriptor():
             fileName(""),
             totalFileSize(0),
-//            pcmDataSize_bytes(0),
             samplesPerChannel(0),
             sampleSize_bytes(0),
             hasPCMData(false),
@@ -128,10 +115,8 @@ struct WAVFileDescriptor{
 class WavFileReader {
 public:
     WavFileReader(std::string fileName);
-    uint8_t* data_buf;
-    uint32_t data_size;
-    inline uint8_t* getData() {return data_buf;}
-    inline uint32_t getDataSize() {return data_size;}
+    uint8_t* getData();
+    uint32_t getDataSize();
 
     enum WaveDataFormat{
         WAVE_FORMAT_UNKNOWN = 0,
@@ -141,8 +126,8 @@ public:
 
 
 private:
-    void parseWAVFile(const string &fileName);
-    void readDataChunk(WAVFileDescriptor* decr);
+    //parse file header till the first data chunk if it exists
+    void parseWAVFileHead(const string &fileName);
 
     // check if file has extension ".wav" or ".wave"
     bool isWAVextension(const string &fileName);
@@ -159,24 +144,11 @@ private:
     // function returns total file size of given file descriptor
     uint32_t getFileSize(FILE* fd);
 
-    // read first chunk of file and check if it is RIFF
-    // fills part of wav file descriptor
-    bool isRIFFFile();
-
     //checks if file has WAVE data
     bool isWAVEFile();
 
     //gets format description for PCM data
     void getFormatDescription(ChunkHeader chunkHeader);
-
-    //find out the format of data (PCM or FLOAT in this case)
-    WaveDataFormat getDataFormat();
-
-    //read the data format description
-    WAVEFormat* readFormatDescription(WaveDataFormat format);
-
-    //read signal data with silence blocks
-    void goToNextDataBegin();
 
     //get bytes per sample (12bit sample-> 2 bytes)
     uint32_t getBytesPerSample();
@@ -191,35 +163,11 @@ private:
 
     // helps to read different data types from file with checking available data size in file
     //TODO everywhere put this FUNCTION
-    bool readFromFileWithCheck(FILE* fd, uint8_t* buffer, uint32_t dataSize){
-        if (!hasFileEnoughDataForRead(dataSize, fd) ){
-            cerr << "Error on reading data from file - is too small." << endl;
-            return false;
-        }
-        size_t status = fread(buffer, sizeof(uint8_t), dataSize, fd);
-        if (status != dataSize){
-            cerr << "Error on reading file (read return " << status << " expected = " << dataSize << ")" << endl;
-            return false;
-        }
-        return true;
-    }
+    bool readFromFileWithCheck(FILE* fd, uint8_t* buffer, uint32_t dataSize);
 
-    bool seekInFileWithCheck(FILE* fd, uint32_t seekSize){
-        if (!hasFileEnoughDataForRead(seekSize, fd) ){
-            cerr << "Error on seeking the file (is too small)." << endl;
-            return false;
-        }
-        int status = fseek(fd, seekSize, SEEK_CUR);
-        if (status != 0){
-            cerr << "Error on seeking file. status = " << status << endl;
-            return false;
-        }
-        return true;
-    }
+    bool seekInFileWithCheck(FILE* fd, uint32_t seekSize);
 
     WAVFileDescriptor m_wavFileDescr;
-    enum CHANNEL {LEFT, RIGHT};
-    vector<int32_t> buf_pcm32[2];
 };
 
 
