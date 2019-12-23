@@ -6,6 +6,7 @@
 #define WAV2MP3_WAVFILECONVERTER_H
 
 #include <string>
+#include <vector>
 
 #include "WavFileReader.h"
 #include "SignalDataEncoder.h"
@@ -39,6 +40,7 @@ private:
     SignalDataEncoder* m_encoder;
 
     uint32_t m_encodingChunkSize_samples;
+    vector<vector<int32_t> *>* m_readerBuf;
 };
 
 

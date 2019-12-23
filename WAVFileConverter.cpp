@@ -7,6 +7,13 @@
 WAVFileConverter::WAVFileConverter():
         m_encodingChunkSize_samples(1024){
 //TODO set sample chunk size
+    m_readerBuf = new vector< vector<int32_t>* >();
+
+    // as we work with only 2 channels
+    m_readerBuf->push_back(new vector<int32_t>());
+    m_readerBuf->push_back(new vector<int32_t>());
+    m_readerBuf->at(0)->reserve(m_encodingChunkSize_samples);
+    m_readerBuf->at(1)->reserve(m_encodingChunkSize_samples);
 }
 
 bool WAVFileConverter::checkExtension(const string &fileName) {
