@@ -4,13 +4,14 @@
 
 #include "UnsignedIntWaveDataReader.h"
 
-void UnsignedIntWaveDataReader::fullDataStorage(vector<vector<int32_t> *> *dataOut) {
+void UnsignedIntWaveDataReader::fillDataStorage(vector<vector<int32_t> *> *dataOut) {
     // on start all variables are checked in parent's getData
 
     //TODO try to read silence
     //TODO check file size and data size
     //TODO check if EOF
     //TODO think about stream encoding
+    //TODO think about 1bit smth
     uint8_t shift_value = 32 - m_bitsPerSample;
     int32_t midValue = pow(2, m_bitsPerSample-1); // equals pow(2, m_bitsPerSample)/2
     while(true){

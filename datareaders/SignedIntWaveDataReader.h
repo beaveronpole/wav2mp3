@@ -14,7 +14,7 @@
 class SignedIntWaveDataReader : public BaseWaveDataReader{
 public:
 protected:
-    virtual void fullDataStorage(vector<vector<int32_t> *> *vector);
+    virtual void fillDataStorage(vector<vector<int32_t> *> *vector);
 };
 
 

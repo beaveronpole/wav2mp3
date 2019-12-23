@@ -6,12 +6,11 @@
 
 BaseWaveDataReader::BaseWaveDataReader():
         m_fd(NULL),
-        m_dataSize_bytes(0),
         m_channelsCount(0)
 {
 }
 
-void BaseWaveDataReader::init(FILE *fd, uint32_t dataSize_bytes, uint32_t channelsCount, uint32_t bitsPerSample) {
+void BaseWaveDataReader::init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample) {
     m_bitsPerSample = bitsPerSample;
     if (m_bitsPerSample < 2){
         cerr << "Error in sample size." << endl;
@@ -19,7 +18,6 @@ void BaseWaveDataReader::init(FILE *fd, uint32_t dataSize_bytes, uint32_t channe
     }
 
     m_fd = fd;
-    m_dataSize_bytes = dataSize_bytes;
     m_channelsCount = channelsCount;
 
     if (m_bitsPerSample <= 8){
@@ -46,7 +44,8 @@ void BaseWaveDataReader::clearDataVectors(vector<vector<int32_t>* >* v) {
 }
 
 vector<vector<int32_t>* > *BaseWaveDataReader::getData(uint32_t samplesPerChannel) {
-    if (m_fd == NULL || m_dataSize_bytes == 0 || m_channelsCount == 0){
+    //TODO read bytes count!! in args (now it reads till file's end)
+    if (m_fd == NULL || m_channelsCount == 0){
         cerr << "Error on get data. Data reader is not initialized" << endl;
         return NULL;
     }
@@ -56,6 +55,6 @@ vector<vector<int32_t>* > *BaseWaveDataReader::getData(uint32_t samplesPerChanne
         tmp_v->reserve(samplesPerChannel);
         out->push_back( tmp_v );
     }
-    fullDataStorage(out); // function for specialization of children classes
+    fillDataStorage(out); // function for specialization of children classes
     return out;
 }

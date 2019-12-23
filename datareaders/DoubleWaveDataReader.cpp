@@ -4,7 +4,7 @@
 
 #include "DoubleWaveDataReader.h"
 
-void DoubleWaveDataReader::fullDataStorage(vector<vector<int32_t> *> *dataOut) {
+void DoubleWaveDataReader::fillDataStorage(vector<vector<int32_t> *> *dataOut) {
     // on start all variables are checked in parent's getData
 
     //TODO try to read silence

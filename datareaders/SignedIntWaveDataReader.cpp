@@ -6,7 +6,7 @@
 
 using namespace std;
 
-void SignedIntWaveDataReader::fullDataStorage(vector<vector<int32_t> *> * dataOut) {
+void SignedIntWaveDataReader::fillDataStorage(vector<vector<int32_t> *> * dataOut) {
     // on start all variables are checked in parent's getData
 
     //TODO try to read silence

@@ -21,7 +21,7 @@ using namespace std;
 class BaseWaveDataReader {
 public:
     BaseWaveDataReader();
-    void init(FILE *fd, uint32_t dataSize_bytes, uint32_t channelsCount, uint32_t bitsPerSample);
+    void init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample);
 
     // function try to get data from a file
     vector< vector<int32_t>* >* getData(uint32_t samplesPerChannel = 0) ;
@@ -32,10 +32,9 @@ public:
 protected:
 
     // fucnction specialized in children classes
-    virtual void fullDataStorage(vector< vector<int32_t>* >*) = 0;
+    virtual void fillDataStorage(vector< vector<int32_t>* >*) = 0;
 
     FILE* m_fd;
-    uint32_t m_dataSize_bytes;
     uint32_t m_channelsCount;
     uint32_t m_bitsPerSample;
     uint32_t m_bytesPerSample;
