@@ -7,7 +7,7 @@
 SignalDataEncoder::SignalDataEncoder(const string &outputFileName,
                                      uint32_t channelsCount,
                                      uint32_t samplesPerSec,
-                                     uint32_t encodingChunkSize) :
+                                     uint32_t encodingChunkSize_samples) :
         m_fd(NULL)
 {
     m_gfp = lame_init();
@@ -19,7 +19,7 @@ SignalDataEncoder::SignalDataEncoder(const string &outputFileName,
     int ret_code = lame_init_params(m_gfp);
     cout << "Ret code = " << ret_code << endl;
 
-    m_mp3bufferSize_bytes = encodingChunkSize + 7200; //some tail for sure
+    m_mp3bufferSize_bytes = 1.25 * encodingChunkSize_samples + 7200; //some tail for sure
     m_mp3buffer = new uint8_t[m_mp3bufferSize_bytes];
 
     m_fd = fopen(outputFileName.c_str(), "w");
@@ -66,4 +66,8 @@ int32_t SignalDataEncoder::finishEncoding() {
     }
     cout << "Encode flush return " << returnFlush << endl;
     fclose(m_fd);
+}
+
+SignalDataEncoder::~SignalDataEncoder() {
+    //TODO fill destructor
 }

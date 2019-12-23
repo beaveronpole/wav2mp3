@@ -32,8 +32,13 @@ public:
     static string makeMP3FileName(const string& fileName);
 
 private:
+    //TODO recreate reader for every new file
+    WavFileReader* m_reader;
 
+    //TODO recreate encoder for every new file
+    SignalDataEncoder* m_encoder;
 
+    uint32_t m_encodingChunkSize_samples;
 };
 
 

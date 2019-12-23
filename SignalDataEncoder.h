@@ -20,14 +20,18 @@ using namespace std;
 
 class SignalDataEncoder {
 public:
-    SignalDataEncoder(const string &outputFileName, uint32_t channelsCount, uint32_t samplesPerSec,
-                      uint32_t encodingChunkSize);
+    SignalDataEncoder(const string &outputFileName,
+                      uint32_t channelsCount,
+                      uint32_t samplesPerSec,
+                      uint32_t encodingChunkSize_samples);
 
     //function put data to encoder and save encoded data to file
     int32_t putDataForEncoding(int32_t *dataLeft, int32_t *dataRight, int32_t dataSize);
 
     //makes lame flush and close file
     int32_t finishEncoding();
+
+    virtual ~SignalDataEncoder();
 
 private:
     lame_global_flags* m_gfp;

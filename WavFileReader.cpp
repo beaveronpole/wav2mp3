@@ -318,3 +318,7 @@ void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size) {
 
 }
 
+WavFileReader::~WavFileReader() {
+//TODO fill destructor
+}
+

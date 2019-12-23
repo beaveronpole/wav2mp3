@@ -120,11 +120,15 @@ public:
     //read data of size from file and put to vector
     void getData(vector<vector<int32_t> *> *buf, uint32_t size);
 
+    inline WAVFileDescriptor getFileInfo(){return m_wavFileDescr;}
+
     enum WaveDataFormat{
         WAVE_FORMAT_UNKNOWN = 0,
         WAVE_FORMAT_PCM = 1, //work only with simple integer PCM data, as it is a test task
         WAVE_FORMAT_FLOAT = 3 //work with float data
     };
+
+    virtual ~WavFileReader();
 
 
 private:

@@ -4,7 +4,10 @@
 
 #include "WAVFileConverter.h"
 
-WAVFileConverter::WAVFileConverter() {}
+WAVFileConverter::WAVFileConverter():
+        m_encodingChunkSize_samples(1024){
+//TODO set sample chunk size
+}
 
 bool WAVFileConverter::checkExtension(const string &fileName) {
     if (fileName.empty())
@@ -43,7 +46,16 @@ void WAVFileConverter::processFile(const string &fileName) {
     string outMP3FileName = makeMP3FileName(fileName);
 
     //create file reader
+    m_reader = new WavFileReader(fileName);
+    WAVFileDescriptor WAVFileInfo = m_reader->getFileInfo();
+
     //create file encoder
+    m_encoder = new SignalDataEncoder(outMP3FileName,
+            WAVFileInfo.header.descr.channels,
+            WAVFileInfo.header.descr.samplesPerSec,
+            m_encodingChunkSize_samples);
+
+    //loop for reading and encoding
 
 }
 
