@@ -73,7 +73,6 @@ WavFileReader::WavFileReader(std::string fileName) {
 
 void WavFileReader::parseWAVFileHead(const string &fileName) {
     ChunkHeader chunkHeaderTmp;
-    if (!isWAVextension(fileName)) return;
     if (!openWavFile(fileName)) return;
     m_wavFileDescr.totalFileSize = getFileSize(m_wavFileDescr.fd);
     if (m_wavFileDescr.totalFileSize == 0){
@@ -110,20 +109,6 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
 
     m_wavFileDescr.samplesPerChannel = getSamplesPerChannel(chunkHeaderTmp.size > fileTailSize?fileTailSize:chunkHeaderTmp.size);
     return;
-}
-
-bool WavFileReader::isWAVextension(const string &fileName) {
-    if (fileName.empty())
-        return false;
-    int32_t last_separator_pos = fileName.find_last_of(PATH_SEPARATOR);
-    int32_t last_dot_pos = fileName.find_last_of('.');
-    if (last_dot_pos - last_separator_pos <= 1){
-        return false;
-    }
-    string extension = fileName.substr(last_dot_pos + 1);
-    if (extension.empty())
-        return false;
-    return extension == "wav" || extension == "wave";
 }
 
 bool WavFileReader::openWavFile(const string &fileName) {

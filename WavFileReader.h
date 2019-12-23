@@ -131,9 +131,6 @@ private:
     //parse file header till the first data chunk if it exists
     void parseWAVFileHead(const string &fileName);
 
-    // check if file has extension ".wav" or ".wave"
-    bool isWAVextension(const string &fileName);
-
     //find next chunk with name
     //we can read chunk neatly, because of size 8 bytes
     //returns chunk header
