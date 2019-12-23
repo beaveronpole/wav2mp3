@@ -10,7 +10,6 @@ using namespace std;
 WavFileReader::WavFileReader(std::string fileName) {
     parseWAVFileHead(fileName);
     cout << "Samples per channel = " << m_wavFileDescr.samplesPerChannel << endl;
-//    this->readDataChunk(&m_wavFileDescr);
     //TODO try to read silence
     //TODO check file size and data size
     //TODO skip channels more than 2
@@ -43,14 +42,20 @@ WavFileReader::WavFileReader(std::string fileName) {
 
     //TODO check put data to encoder by chunks (not WAV chunks, but random size chunks)
 
-    int return_encode = lame_encode_buffer_int(gfp,
-                                               signalData->at(0)->data(),
-                                               (signalData->size()>1?signalData->at(1)->data():signalData->at(0)->data()),
-                                               (int)m_wavFileDescr.samplesPerChannel,
-                                               mp3buffer,
-                                               (int)mp3buffer_size_bytes);
-    cout << "Encode return " << return_encode << endl;
-    fwrite(mp3buffer, return_encode, 1, out);
+    uint32_t step = 8000;
+    cout << "signalData[0].size() = " << signalData->at(0)->size() << endl;
+    for (int i = 0 ; i < signalData->at(0)->size(); i+=step) {
+        int return_encode = lame_encode_buffer_int(gfp,
+                                                   signalData->at(0)->data() + i,
+                                                   (signalData->size() > 1 ? signalData->at(1)->data()+i : signalData->at(
+                                                           0)->data()+i),
+                                                   (int) step,
+                                                   mp3buffer,
+                                                   (int) mp3buffer_size_bytes);
+        cout << "Encode return " << return_encode << endl;
+        if (return_encode)
+            fwrite(mp3buffer, return_encode, 1, out);
+    }
 
     int return_flush = lame_encode_flush(
             gfp,    /* global context handle                 */
@@ -323,3 +328,8 @@ bool WavFileReader::seekInFileWithCheck(FILE *fd, uint32_t seekSize) {
     }
     return true;
 }
+
+void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size) {
+
+}
+

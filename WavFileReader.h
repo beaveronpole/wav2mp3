@@ -22,6 +22,7 @@
 
 using namespace std;
 
+//useful thing for RIFF format
 struct FourCC{
     uint8_t fourcc[4];
 
@@ -34,6 +35,7 @@ struct FourCC{
     }
 };
 
+//thing for chunks with size
 struct ChunkHeader{
     FourCC fourcc; //must be RIFF
     uint32_t size;
@@ -85,7 +87,6 @@ struct WAVFileHeader{
     FileFormat fmt; // WAVE
     ChunkHeader ck_fmt; // fmt
     WAVEFormat descr; // fmt content (PCM or FLOAT)
-    ChunkHeader ck_data; // data chunk
 
     inline WAVFileHeader()
     {}
@@ -114,9 +115,10 @@ struct WAVFileDescriptor{
 
 class WavFileReader {
 public:
-    WavFileReader(std::string fileName);
-    uint8_t* getData();
-    uint32_t getDataSize();
+    explicit WavFileReader(std::string fileName);
+
+    //read data of size from file and put to vector
+    void getData(vector<vector<int32_t> *> *buf, uint32_t size);
 
     enum WaveDataFormat{
         WAVE_FORMAT_UNKNOWN = 0,
