@@ -1,3 +1,4 @@
 /lame-3.100/
 /cmake-build-debug/
 /build/*.mp3
+/build/wav2mp3
