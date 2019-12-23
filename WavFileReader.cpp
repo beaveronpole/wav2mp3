@@ -15,60 +15,61 @@ WavFileReader::WavFileReader(std::string fileName) {
     //TODO skip channels more than 2
     //TODO check if EOF
     //TODO think about stream encoding
-    BaseWaveDataReader* datareader = WaveDataReaderCreator::createDataReader(m_wavFileDescr.header.descr.bitsPerSample, m_wavFileDescr.hasFloatFormat);
-    datareader->init(m_wavFileDescr.fd, m_wavFileDescr.header.descr.channels, m_wavFileDescr.header.descr.bitsPerSample);
+    m_datareader = WaveDataReaderCreator::createDataReader(m_wavFileDescr.header.descr.bitsPerSample, m_wavFileDescr.hasFloatFormat);
+    m_datareader->init(m_wavFileDescr.fd, m_wavFileDescr.header.descr.channels, m_wavFileDescr.header.descr.bitsPerSample);
 
-    //TODO read in loop may be? By chunks
-    vector< vector<int32_t>* >* signalData = datareader->getData();
-
-
-    uint32_t mp3buffer_size_bytes = 1.25 * m_wavFileDescr.samplesPerChannel + 7200;
-    uint8_t * mp3buffer = new uint8_t[mp3buffer_size_bytes];
-
-    lame_global_flags *gfp;
-    gfp = lame_init();
-
-    lame_set_num_channels(gfp, m_wavFileDescr.header.descr.channels);
-    lame_set_in_samplerate(gfp, m_wavFileDescr.header.descr.samplesPerSec);
-    lame_set_brate(gfp,256);
-    lame_set_mode(gfp, static_cast<MPEG_mode>(1));
-    lame_set_quality(gfp,5);   /* 2=high  5 = medium  7=low */
-    int ret_code = lame_init_params(gfp);
-
-    cout << "Ret code = " << ret_code << endl;
-    FILE * out = fopen("./out.mp3", "w");
-
-    cout << "----------------" << endl;
-
-    //TODO check put data to encoder by chunks (not WAV chunks, but random size chunks)
-
-    uint32_t step = 8000;
-    cout << "signalData[0].size() = " << signalData->at(0)->size() << endl;
-    for (int i = 0 ; i < signalData->at(0)->size(); i+=step) {
-        int return_encode = lame_encode_buffer_int(gfp,
-                                                   signalData->at(0)->data() + i,
-                                                   (signalData->size() > 1 ? signalData->at(1)->data()+i : signalData->at(
-                                                           0)->data()+i),
-                                                   (int) step,
-                                                   mp3buffer,
-                                                   (int) mp3buffer_size_bytes);
-        cout << "Encode return " << return_encode << endl;
-        if (return_encode)
-            fwrite(mp3buffer, return_encode, 1, out);
-    }
-
-    int return_flush = lame_encode_flush(
-            gfp,    /* global context handle                 */
-            mp3buffer, /* pointer to encoded MP3 stream         */
-            (int)mp3buffer_size_bytes);  /* number of valid octets in this stream */
-    if (return_flush > 0) {
-        fwrite(mp3buffer, return_flush, 1, out);
-    }
-    cout << "Encode flush return " << return_flush << endl;
-    fclose(out);
-    fclose(m_wavFileDescr.fd);
-
-
+//
+//
+//
+//    //TODO read in loop may be? By chunks
+//    vector< vector<int32_t>* >* signalData = m_datareader->getData();
+//
+//
+//    uint32_t mp3buffer_size_bytes = 1.25 * m_wavFileDescr.samplesPerChannel + 7200;
+//    uint8_t * mp3buffer = new uint8_t[mp3buffer_size_bytes];
+//
+//    lame_global_flags *gfp;
+//    gfp = lame_init();
+//
+//    lame_set_num_channels(gfp, m_wavFileDescr.header.descr.channels);
+//    lame_set_in_samplerate(gfp, m_wavFileDescr.header.descr.samplesPerSec);
+//    lame_set_brate(gfp,256);
+//    lame_set_mode(gfp, static_cast<MPEG_mode>(1));
+//    lame_set_quality(gfp,5);   /* 2=high  5 = medium  7=low */
+//    int ret_code = lame_init_params(gfp);
+//
+//    cout << "Ret code = " << ret_code << endl;
+//    FILE * out = fopen("./out.mp3", "w");
+//
+//    cout << "----------------" << endl;
+//
+//    //TODO check put data to encoder by chunks (not WAV chunks, but random size chunks)
+//
+//    uint32_t step = 8000;
+//    cout << "signalData[0].size() = " << signalData->at(0)->size() << endl;
+//    for (int i = 0 ; i < signalData->at(0)->size(); i+=step) {
+//        int return_encode = lame_encode_buffer_int(gfp,
+//                                                   signalData->at(0)->data() + i,
+//                                                   (signalData->size() > 1 ? signalData->at(1)->data()+i : signalData->at(
+//                                                           0)->data()+i),
+//                                                   (int) step,
+//                                                   mp3buffer,
+//                                                   (int) mp3buffer_size_bytes);
+//        cout << "Encode return " << return_encode << endl;
+//        if (return_encode)
+//            fwrite(mp3buffer, return_encode, 1, out);
+//    }
+//
+//    int return_flush = lame_encode_flush(
+//            gfp,    /* global context handle                 */
+//            mp3buffer, /* pointer to encoded MP3 stream         */
+//            (int)mp3buffer_size_bytes);  /* number of valid octets in this stream */
+//    if (return_flush > 0) {
+//        fwrite(mp3buffer, return_flush, 1, out);
+//    }
+//    cout << "Encode flush return " << return_flush << endl;
+//    fclose(out);
+//    fclose(m_wavFileDescr.fd);
 }
 
 void WavFileReader::parseWAVFileHead(const string &fileName) {
@@ -95,7 +96,7 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
     if (chunkHeaderTmp.size == 0){ // no data
         return;
     }
-
+    m_readDataSizeOfCurrentChunk = 0;
 
     // TODO check ALL read returns
 
@@ -106,9 +107,7 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
     m_wavFileDescr.sampleSize_bytes = getBytesPerSample();
     //TODO get real data size in chunk
     uint32_t fileTailSize = getFileTailSize(m_wavFileDescr.fd);
-
     m_wavFileDescr.samplesPerChannel = getSamplesPerChannel(chunkHeaderTmp.size > fileTailSize?fileTailSize:chunkHeaderTmp.size);
-    return;
 }
 
 bool WavFileReader::openWavFile(const string &fileName) {
@@ -261,6 +260,7 @@ uint32_t WavFileReader::getSamplesPerChannel(uint32_t dataSize_bytes) {
 }
 
 ChunkHeader WavFileReader::goToNextChunk(FILE* fd, const string &name) {
+    //TODO if file error- find correct chunk byte per byte
     ChunkHeader out;
     do {
         if (readFromFileWithCheck(fd, (uint8_t*)&out, sizeof(ChunkHeader)) ){
@@ -314,7 +314,16 @@ bool WavFileReader::seekInFileWithCheck(FILE *fd, uint32_t seekSize) {
     return true;
 }
 
-void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size) {
+void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size_samples) {
+    //TODO read several data chunks
+    //TODO calculate data size available for reading
+    //TODO store current data chunk read size
+    uint32_t size_bytes = size_samples * m_wavFileDescr.header.descr.dataBlockAlign;
+    uint32_t read_samples = m_datareader->getData(buf, size_samples);
+    if (read_samples > 0){
+        m_readDataSizeOfCurrentChunk += size_bytes;
+    }
+
 
 }
 

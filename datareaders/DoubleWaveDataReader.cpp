@@ -4,24 +4,20 @@
 
 #include "DoubleWaveDataReader.h"
 
-void DoubleWaveDataReader::fillDataStorage(vector<vector<int32_t> *> *dataOut) {
+void DoubleWaveDataReader::fillDataStorage(vector<uint8_t> *rawBuf,
+                                           uint32_t rawBufDataSize,
+                                           vector<vector<int32_t> *> *dataOut) {
     // on start all variables are checked in parent's getData
 
     //TODO try to read silence
     //TODO check file size and data size
     //TODO check if EOF
     //TODO think about stream encoding
-    while(true){
-        int status;
-        double tmp_sample = 0.0;
-        for (int channel_number = 0; channel_number < m_channelsCount; channel_number++) {
-            //read sample
-            status = fread(&tmp_sample, m_bytesPerSample, 1, m_fd);
-            if (status != 1) {
-                cerr << "Error on reading data chunk." << endl;
-                return;
-            }
-            dataOut->at(channel_number)->push_back(tmp_sample*INT32_MAX);
-        }
+    for (int i = 0, ch = 0 ;
+         i < rawBufDataSize;
+         i += m_bytesPerSample, ch = i%(m_channelsCount*m_bytesPerSample)==0?0:(ch+1)){
+        if (ch >= 2)
+            continue;
+        dataOut->at(ch)->push_back( (*(double*)(rawBuf->data()+i))*INT32_MAX);
     }
 }

@@ -24,7 +24,7 @@ public:
     void init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample);
 
     // function try to get data from a file
-    vector< vector<int32_t>* >* getData(uint32_t samplesPerChannel = 0) ;
+    uint32_t getData(vector<vector<int32_t> *>* buf, uint32_t size_samples) ;
 
     //simple helper for deletion data vectors
     static void clearDataVectors(vector< vector<int32_t>* >*);
@@ -32,12 +32,13 @@ public:
 protected:
 
     // fucnction specialized in children classes
-    virtual void fillDataStorage(vector< vector<int32_t>* >*) = 0;
+    virtual void fillDataStorage(vector<uint8_t> *rawBuf, uint32_t rawBufDataSize, vector<vector<int32_t> *> *out) = 0;
 
     FILE* m_fd;
     uint32_t m_channelsCount;
     uint32_t m_bitsPerSample;
     uint32_t m_bytesPerSample;
+    vector<uint8_t> m_rawBuffer;
 };
 
 

@@ -118,7 +118,8 @@ public:
     explicit WavFileReader(std::string fileName);
 
     //read data of size from file and put to vector
-    void getData(vector<vector<int32_t> *> *buf, uint32_t size);
+    // why is size but not vector capacity? It should be more evident
+    void getData(vector<vector<int32_t> *>* buf, uint32_t size_samples);
 
     inline WAVFileDescriptor getFileInfo(){return m_wavFileDescr;}
 
@@ -171,6 +172,9 @@ private:
     bool seekInFileWithCheck(FILE* fd, uint32_t seekSize);
 
     WAVFileDescriptor m_wavFileDescr;
+    BaseWaveDataReader* m_datareader;
+
+    uint32_t m_readDataSizeOfCurrentChunk;
 };
 
 

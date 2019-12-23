@@ -9,7 +9,7 @@
 
 class FloatWaveDataReader : public BaseWaveDataReader{
 protected:
-    virtual void fillDataStorage(vector<vector<int32_t> *> *vector);
+    virtual void fillDataStorage(vector<uint8_t> *rawBuf, uint32_t rawBufDataSize, vector<vector<int32_t> *> *vector);
 };
 
 

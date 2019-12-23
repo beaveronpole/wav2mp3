@@ -43,18 +43,24 @@ void BaseWaveDataReader::clearDataVectors(vector<vector<int32_t>* >* v) {
     }
 }
 
-vector<vector<int32_t>* > *BaseWaveDataReader::getData(uint32_t samplesPerChannel) {
+uint32_t BaseWaveDataReader::getData(vector<vector<int32_t>* >* buf, uint32_t size_samples) {
     //TODO read bytes count!! in args (now it reads till file's end)
     if (m_fd == NULL || m_channelsCount == 0){
         cerr << "Error on get data. Data reader is not initialized" << endl;
         return NULL;
     }
-    vector<vector<int32_t>* >* out = new vector<vector<int32_t>* >();
-    for (int i =0; i < m_channelsCount; i++){
-        vector<int32_t>* tmp_v = new vector<int32_t>();
-        tmp_v->reserve(samplesPerChannel);
-        out->push_back( tmp_v );
+
+    //TODO read data from file HERE!!! ANd put it to subclasses
+    uint32_t sizeForReading = size_samples * m_channelsCount * m_bytesPerSample;
+    m_rawBuffer.reserve(sizeForReading);
+    //read from file available data
+    size_t status = fread(m_rawBuffer.data(), sizeForReading, 1, m_fd);
+    if (status != 1) {
+        cerr << "Error on reading data from file." << endl;
+        return 0;
     }
-    fillDataStorage(out); // function for specialization of children classes
-    return out;
+    buf->at(0)->clear();
+    buf->at(1)->clear();
+    fillDataStorage(&m_rawBuffer, sizeForReading, buf); // function for specialization of children classes
+    return buf[0].size();
 }

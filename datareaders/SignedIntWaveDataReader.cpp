@@ -6,26 +6,21 @@
 
 using namespace std;
 
-void SignedIntWaveDataReader::fillDataStorage(vector<vector<int32_t> *> * dataOut) {
+void SignedIntWaveDataReader::fillDataStorage(vector<uint8_t> *rawBuf, uint32_t rawBufDataSize,
+                                              vector<vector<int32_t> *> *dataOut) {
     // on start all variables are checked in parent's getData
 
     //TODO try to read silence
     //TODO check file size and data size
     //TODO check if EOF
     //TODO think about stream encoding
-    uint8_t shift_value = 32 - m_bitsPerSample;
-    while(true){
-        int status;
-        int32_t tmp_sample = 0;
 
-        for (int channel_number = 0; channel_number < m_channelsCount; channel_number++) {
-            //read sample
-            status = fread(&tmp_sample, m_bytesPerSample, 1, m_fd);
-            if (status != 1) {
-                cerr << "Error on reading data chunk." << endl;
-                return;
-            }
-            dataOut->at(channel_number)->push_back(tmp_sample << shift_value);
-        }
+    uint8_t shift_value = 32 - m_bitsPerSample;
+    for (int i = 0, ch = 0 ;
+         i < rawBufDataSize;
+         i += m_bytesPerSample, ch = i%(m_channelsCount*m_bytesPerSample)==0?0:(ch+1)){
+        if (ch >= 2)
+            continue;
+        dataOut->at(ch)->push_back( (*(int32_t*)(rawBuf->data()+i)) << shift_value);
     }
 }
