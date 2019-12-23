@@ -25,10 +25,13 @@ public:
     WAVFileConverter();
     void processFile(const string& fileName);
 
-private:
-
     // check if file has extension ".wav" or ".wave"
-    bool checkExtension(const string& fileName);
+    static bool checkExtension(const string& fileName);
+
+    // make file name with mp3 extension from given file name (*.wav)
+    static string makeMP3FileName(const string& fileName);
+
+private:
 
 
 };
