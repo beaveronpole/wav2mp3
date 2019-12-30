@@ -54,6 +54,7 @@ void WAVFileConverter::processFile(const string &fileName) {
     }
 
     //create file reader
+    //TODO check creation of m_reader
     m_reader = new WavFileReader(fileName);
     WAVFileDescriptor WAVFileInfo = m_reader->getFileInfo();
     //check RIFF
@@ -68,6 +69,7 @@ void WAVFileConverter::processFile(const string &fileName) {
     string outMP3FileName = makeMP3FileName(fileName);
 
     //create file encoder
+    //TODO check creation of m_encoder
     m_encoder = new SignalDataEncoder(outMP3FileName,
                                       WAVFileInfo.header.descr.channels,
                                       WAVFileInfo.header.descr.samplesPerSec,
@@ -91,7 +93,7 @@ void WAVFileConverter::cleanBuffer() {
 }
 
 WAVFileConverter::~WAVFileConverter() {
-    delete m_reader;
-    delete m_encoder;
+//    delete m_reader;
+//    delete m_encoder;
 }
 

@@ -10,7 +10,7 @@ BaseWaveDataReader::BaseWaveDataReader():
 {
 }
 
-void BaseWaveDataReader::init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample) {
+void BaseWaveDataReader::init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample, uint32_t bytesPerSample) {
     m_bitsPerSample = bitsPerSample;
     if (m_bitsPerSample < 2){
         cerr << "Error in sample size." << endl;
@@ -19,22 +19,23 @@ void BaseWaveDataReader::init(FILE *fd, uint32_t channelsCount, uint32_t bitsPer
 
     m_fd = fd;
     m_channelsCount = channelsCount;
+    m_bytesPerSample = bytesPerSample;
 
-    if (m_bitsPerSample <= 8){
-        m_bytesPerSample = 1;
-    }
-    else if (m_bitsPerSample <= 16){
-        m_bytesPerSample = 2;
-    }
-    else if (m_bitsPerSample <= 24){
-        m_bytesPerSample = 3;
-    }
-    else if (m_bitsPerSample <= 32){
-        m_bytesPerSample = 4;
-    }
-    else{
-        m_bytesPerSample  = 8;
-    }
+//    if (m_bitsPerSample <= 8){
+//        m_bytesPerSample = 1;
+//    }
+//    else if (m_bitsPerSample <= 16){
+//        m_bytesPerSample = 2;
+//    }
+//    else if (m_bitsPerSample <= 24){
+//        m_bytesPerSample = 3;
+//    }
+//    else if (m_bitsPerSample <= 32){
+//        m_bytesPerSample = 4;
+//    }
+//    else{
+//        m_bytesPerSample  = 8;
+//    }
 }
 
 uint32_t BaseWaveDataReader::getData(vector<vector<int32_t>* >* buf, uint32_t size_samples) {

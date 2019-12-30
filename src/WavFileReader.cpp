@@ -16,12 +16,14 @@ WavFileReader::WavFileReader(std::string fileName):
     //TODO skip channels more than 2
     //TODO check if EOF
     //TODO think about stream encoding
-    m_datareader = WaveDataReaderCreator::createDataReader(m_wavFileDescr.header.descr.bitsPerSample, m_wavFileDescr.hasFloatFormat);
+    m_datareader = WaveDataReaderCreator::createDataReader(m_wavFileDescr.header.descr.bitsPerSample,
+            m_wavFileDescr.hasFloatFormat);
     if (m_datareader == NULL){
         cerr << "Unsupported format." << endl;
         return;
     }
-    m_datareader->init(m_wavFileDescr.fd, m_wavFileDescr.header.descr.channels, m_wavFileDescr.header.descr.bitsPerSample);
+    m_datareader->init(m_wavFileDescr.fd, m_wavFileDescr.header.descr.channels,
+                       m_wavFileDescr.header.descr.bitsPerSample, getBytesPerSample());
 }
 
 void WavFileReader::parseWAVFileHead(const string &fileName) {
@@ -204,6 +206,9 @@ uint32_t WavFileReader::getBytesPerSample() {
     }
     else if (m_wavFileDescr.header.descr.bitsPerSample <= 16){
         sampleSize_bytes = 2;
+    }
+    else if (m_wavFileDescr.header.descr.bitsPerSample <= 24){
+        sampleSize_bytes = 3;
     }
     else if (m_wavFileDescr.header.descr.bitsPerSample <= 32){
         sampleSize_bytes = 4;

@@ -22,7 +22,7 @@ using namespace std;
 class BaseWaveDataReader {
 public:
     BaseWaveDataReader();
-    void init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample);
+    void init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample, uint32_t bytesPerSample);
 
     // function try to get data from a file
     uint32_t getData(vector<vector<int32_t> *>* buf, uint32_t size_samples) ;
