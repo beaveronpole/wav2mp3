@@ -1,31 +1,30 @@
 # Brief
-This is a project for task: convert WAV files to MP3 files in multithread manner
+This is a project for task: 
+- convert WAV files to MP3 files in multithread manner.
+
+# Description
+The project contains WAV file parser for data types:
+- unsinged integer 8 bit
+- signed integer 16 bit
+- signed integer 24 bit
+- signed integer 32 bit
+- float 32 bit
+- float 64 bit
+
+It should works and for unsigned 2..7 bit data, and signed 9..31 data, but i have no files to check.
 
 # Result
-No result yet! It is in progress.
+Now the application can read WAV file and convert it to MP3 file using Lame library 3.100 in single thread.
+The files for encoding should be described in the main function.
+It works only in Linux (debian, ubuntu) yet. 
 
 # Plan
 
-1. read about wav files format
-1.1 make wav simple parser
-1.2 add wav file readers
-2. read about mp3 file format
-3. try to use lame frontend
-4. try to understand how does lame frontend work
-5. try to understand how to convert files in multithread manner
-6. try to understand is it possible to convert a single file by several threads (with lame)
-7. get additional metadata from input files and put it to outputfiles (like author)
-8. make perfect code in linux
-9. try the same things in windows
-10. make cross platform settings
+1. Add reading start args
+2. Add multithreading for files
+3. Try to compile in Windows
+4. Think about ID3 tags
 
-
-
-
-# Description
-
-Now it is an ugly code, but it will be better soon
-
-#Notes
+#### Notes
 
 ./configure --prefix=.../wav2mp3/lame-3.100/build --with-pic
