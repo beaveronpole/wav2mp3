@@ -25,3 +25,7 @@ No result yet! It is in progress.
 # Description
 
 Now it is an ugly code, but it will be better soon
+
+#Notes
+
+./configure --prefix=.../wav2mp3/lame-3.100/build --with-pic

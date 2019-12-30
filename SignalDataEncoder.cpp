@@ -13,7 +13,7 @@ SignalDataEncoder::SignalDataEncoder(const string &outputFileName,
     m_gfp = lame_init();
     lame_set_num_channels(m_gfp, channelsCount);
     lame_set_in_samplerate(m_gfp, samplesPerSec);
-    lame_set_brate(m_gfp,256);
+    lame_set_brate(m_gfp,128);
     lame_set_mode(m_gfp, static_cast<MPEG_mode>(1));
     lame_set_quality(m_gfp,5);   /* 2=high  5 = medium  7=low */
     int ret_code = lame_init_params(m_gfp);

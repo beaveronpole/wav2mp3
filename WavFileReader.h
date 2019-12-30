@@ -14,6 +14,7 @@
 #include <map>
 #include <vector>
 #include <cerrno>
+#include <algorithm>
 
 #include "datareaders/datareaders.h"
 
@@ -40,8 +41,17 @@ struct ChunkHeader{
     FourCC fourcc; //must be RIFF
     uint32_t size;
 
-    ChunkHeader(): size(0)
+    inline ChunkHeader(): size(0)
     {}
+};
+
+struct ChunkHeaderDescription{
+    ChunkHeader header;
+    int32_t pos; // position in file of chunk data begin
+
+    inline ChunkHeaderDescription():pos(0)
+    {
+    }
 };
 
 struct FileFormat{
@@ -96,7 +106,7 @@ struct WAVFileDescriptor{
     string fileName;
     uint32_t totalFileSize;
     WAVFileHeader header;
-    uint32_t samplesPerChannel;
+    uint32_t samplesPerChannelInCurrentChunk;
     uint32_t sampleSize_bytes;
     bool hasPCMData;
     bool hasFloatFormat;
@@ -105,7 +115,7 @@ struct WAVFileDescriptor{
     inline WAVFileDescriptor():
             fileName(""),
             totalFileSize(0),
-            samplesPerChannel(0),
+            samplesPerChannelInCurrentChunk(0),
             sampleSize_bytes(0),
             hasPCMData(false),
             hasFloatFormat(false),
@@ -140,7 +150,7 @@ private:
     //we can read chunk neatly, because of size 8 bytes
     //returns chunk header
     //cursor is set on data of chunk
-    ChunkHeader goToNextChunk(FILE* fd, const string &name = "");
+    ChunkHeaderDescription goToNextChunk(FILE *fd, bool fromCurrentPos = true, const string &name = "");
 
     // function tries to open file, checks extension WAV
     bool openWavFile(const string &fileName);
@@ -163,18 +173,20 @@ private:
     bool hasFileEnoughDataForRead(size_t dataSize, FILE* fd);
 
     //return remain file size from the cursor position
-    uint32_t getFileTailSize(FILE* fd);
+    uint32_t getFileTailSize_bytes(FILE* fd);
 
     // helps to read different data types from file with checking available data size in file
     //TODO everywhere put this FUNCTION
     bool readFromFileWithCheck(FILE* fd, uint8_t* buffer, uint32_t dataSize);
 
-    bool seekInFileWithCheck(FILE* fd, uint32_t seekSize);
+    bool seekInFileWithCheck(FILE* fd, uint32_t seekSize, int __whence=SEEK_CUR);
 
     WAVFileDescriptor m_wavFileDescr;
     BaseWaveDataReader* m_datareader;
 
-    uint32_t m_readDataSizeOfCurrentChunk;
+    ChunkHeaderDescription m_currentChunkHeaderDescription;
+
+    uint32_t m_readDataSizeOfCurrentChunk_bytes;
 };
 
 
