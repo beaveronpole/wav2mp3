@@ -25,11 +25,11 @@
 #define LAME_LAME_H
 
 /* for size_t typedef */
-#include "../../../../../../usr/lib/gcc/x86_64-linux-gnu/8/include/stddef.h"
+#include <stddef.h>
 /* for va_list typedef */
-#include "../../../../../../usr/lib/gcc/x86_64-linux-gnu/8/include/stdarg.h"
+#include <stdarg.h>
 /* for FILE typedef, TODO: remove when removing lame_mp3_tags_fid */
-#include "../../../../../../usr/include/stdio.h"
+#include <stdio.h>
 
 #if defined(__cplusplus)
 extern "C" {
