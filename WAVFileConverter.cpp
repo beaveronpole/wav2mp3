@@ -62,11 +62,21 @@ void WAVFileConverter::processFile(const string &fileName) {
             WAVFileInfo.header.descr.samplesPerSec,
             m_encodingChunkSize_samples);
 
-    // loop for reading and encoding
+    // loop for reading  and encoding
+    do {
+        cleanBuffer();
+        m_reader->getData(m_readerBuf, m_encodingChunkSize_samples);
+        m_encoder->putDataForEncoding(m_readerBuf->at(0)->data(), m_readerBuf->at(1)->data(), m_readerBuf->at(0)->size());
+    } while (m_readerBuf->at(0)->size() > 0);
     //    read m_encodingChunkSize_samples
     //    encode m_encodingChunkSize_samples
-
+    m_encoder->finishEncoding();
     //finish
 
+}
+
+void WAVFileConverter::cleanBuffer() {
+    m_readerBuf->at(0)->clear();
+    m_readerBuf->at(1)->clear();
 }
 

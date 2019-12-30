@@ -33,6 +33,8 @@ public:
     static string makeMP3FileName(const string& fileName);
 
 private:
+    void cleanBuffer();
+
     //TODO recreate reader for every new file
     WavFileReader* m_reader;
 

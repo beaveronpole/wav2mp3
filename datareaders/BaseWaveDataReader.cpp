@@ -47,7 +47,7 @@ uint32_t BaseWaveDataReader::getData(vector<vector<int32_t>* >* buf, uint32_t si
     //TODO read bytes count!! in args (now it reads till file's end)
     if (m_fd == NULL || m_channelsCount == 0){
         cerr << "Error on get data. Data reader is not initialized" << endl;
-        return NULL;
+        return 0;
     }
 
     //TODO read data from file HERE!!! ANd put it to subclasses

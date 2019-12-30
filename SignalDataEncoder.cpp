@@ -66,6 +66,7 @@ int32_t SignalDataEncoder::finishEncoding() {
     }
     cout << "Encode flush return " << returnFlush << endl;
     fclose(m_fd);
+    return 0;
 }
 
 SignalDataEncoder::~SignalDataEncoder() {
