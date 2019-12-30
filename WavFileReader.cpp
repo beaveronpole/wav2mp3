@@ -7,7 +7,8 @@
 
 using namespace std;
 
-WavFileReader::WavFileReader(std::string fileName){
+WavFileReader::WavFileReader(std::string fileName):
+        m_datareader(NULL){
     parseWAVFileHead(fileName);
     cout << "Samples per channel = " << m_wavFileDescr.samplesPerChannelInCurrentChunk << endl;
     //TODO try to read silence
@@ -16,60 +17,11 @@ WavFileReader::WavFileReader(std::string fileName){
     //TODO check if EOF
     //TODO think about stream encoding
     m_datareader = WaveDataReaderCreator::createDataReader(m_wavFileDescr.header.descr.bitsPerSample, m_wavFileDescr.hasFloatFormat);
+    if (m_datareader == NULL){
+        cerr << "Unsupported format." << endl;
+        return;
+    }
     m_datareader->init(m_wavFileDescr.fd, m_wavFileDescr.header.descr.channels, m_wavFileDescr.header.descr.bitsPerSample);
-
-//
-//
-//
-//    //TODO read in loop may be? By chunks
-//    vector< vector<int32_t>* >* signalData = m_datareader->getData();
-//
-//
-//    uint32_t mp3buffer_size_bytes = 1.25 * m_wavFileDescr.samplesPerChannelInCurrentChunk + 7200;
-//    uint8_t * mp3buffer = new uint8_t[mp3buffer_size_bytes];
-//
-//    lame_global_flags *gfp;
-//    gfp = lame_init();
-//
-//    lame_set_num_channels(gfp, m_wavFileDescr.header.descr.channels);
-//    lame_set_in_samplerate(gfp, m_wavFileDescr.header.descr.samplesPerSec);
-//    lame_set_brate(gfp,256);
-//    lame_set_mode(gfp, static_cast<MPEG_mode>(1));
-//    lame_set_quality(gfp,5);   /* 2=high  5 = medium  7=low */
-//    int ret_code = lame_init_params(gfp);
-//
-//    cout << "Ret code = " << ret_code << endl;
-//    FILE * out = fopen("./out.mp3", "w");
-//
-//    cout << "----------------" << endl;
-//
-//    //TODO check put data to encoder by chunks (not WAV chunks, but random size chunks)
-//
-//    uint32_t step = 8000;
-//    cout << "signalData[0].size() = " << signalData->at(0)->size() << endl;
-//    for (int i = 0 ; i < signalData->at(0)->size(); i+=step) {
-//        int return_encode = lame_encode_buffer_int(gfp,
-//                                                   signalData->at(0)->data() + i,
-//                                                   (signalData->size() > 1 ? signalData->at(1)->data()+i : signalData->at(
-//                                                           0)->data()+i),
-//                                                   (int) step,
-//                                                   mp3buffer,
-//                                                   (int) mp3buffer_size_bytes);
-//        cout << "Encode return " << return_encode << endl;
-//        if (return_encode)
-//            fwrite(mp3buffer, return_encode, 1, out);
-//    }
-//
-//    int return_flush = lame_encode_flush(
-//            gfp,    /* global context handle                 */
-//            mp3buffer, /* pointer to encoded MP3 stream         */
-//            (int)mp3buffer_size_bytes);  /* number of valid octets in this stream */
-//    if (return_flush > 0) {
-//        fwrite(mp3buffer, return_flush, 1, out);
-//    }
-//    cout << "Encode flush return " << return_flush << endl;
-//    fclose(out);
-//    fclose(m_wavFileDescr.fd);
 }
 
 void WavFileReader::parseWAVFileHead(const string &fileName) {
@@ -235,6 +187,8 @@ void WavFileReader::getFormatDescription(ChunkHeader chunkHeader) {
                                 (uint8_t*)&(m_wavFileDescr.header.descr.cbSize),
                                 sizeof(m_wavFileDescr.header.descr.cbSize) ))
         return;
+
+    m_wavFileDescr.header.descr.print();
 }
 
 bool WavFileReader::hasFileEnoughDataForRead(size_t dataSize, FILE* fd) {
@@ -338,6 +292,10 @@ bool WavFileReader::seekInFileWithCheck(FILE *fd, uint32_t seekSize, int __whenc
 void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size_samples) {
     //TODO think about reading LIST with silence and data
 
+    if (m_datareader == NULL){
+        return;
+    }
+
     int32_t availableInCurrentChunk_samples = m_wavFileDescr.samplesPerChannelInCurrentChunk - m_readDataSizeOfCurrentChunk_bytes/m_wavFileDescr.header.descr.dataBlockAlign;
     if (availableInCurrentChunk_samples <= 0){
         return;
@@ -358,5 +316,6 @@ void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size_sample
 WavFileReader::~WavFileReader() {
     //TODO fill destructor
     fclose(m_wavFileDescr.fd);
+    delete m_datareader;
 }
 

@@ -35,7 +35,6 @@ void BaseWaveDataReader::init(FILE *fd, uint32_t channelsCount, uint32_t bitsPer
     else{
         m_bytesPerSample  = 8;
     }
-//    m_mask = makeMask(bitsPerSample);
 }
 
 uint32_t BaseWaveDataReader::getData(vector<vector<int32_t>* >* buf, uint32_t size_samples) {
@@ -60,10 +59,7 @@ uint32_t BaseWaveDataReader::getData(vector<vector<int32_t>* >* buf, uint32_t si
     return buf[0].size();
 }
 
-uint32_t BaseWaveDataReader::makeMask(uint32_t bitSize) {
-    uint32_t out = 0x1;
-    for (uint32_t i = 0; i < bitSize; ++i){
-        out = (out << 1U) | 1U;
-    }
-    return out;
+BaseWaveDataReader::~BaseWaveDataReader() {
+    m_rawBuffer.clear();
 }
+

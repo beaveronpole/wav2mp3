@@ -4,12 +4,12 @@
 
 #include "WAVFileConverter.h"
 
-WAVFileConverter::WAVFileConverter():
-        m_encodingChunkSize_samples(1024000),
+WAVFileConverter::WAVFileConverter(uint32_t encodingChunkSize_samples) :
+        m_encodingChunkSize_samples(encodingChunkSize_samples),
         m_reader(NULL),
         m_encoder(NULL)
 {
-//TODO set sample chunk size
+    //TODO set sample chunk size
     m_readerBuf = new vector< vector<int32_t>* >();
 
     // as we work with only 2 channels
@@ -47,6 +47,7 @@ string WAVFileConverter::makeMP3FileName(const string &fileName) {
 }
 
 void WAVFileConverter::processFile(const string &fileName) {
+    cout << "Start file = " << fileName << endl;
     //check extension
     if (!checkExtension(fileName)){
         return;
@@ -79,7 +80,9 @@ void WAVFileConverter::processFile(const string &fileName) {
         m_encoder->putDataForEncoding(m_readerBuf->at(0)->data(), m_readerBuf->at(1)->data(), m_readerBuf->at(0)->size());
     } while (m_readerBuf->at(0)->size() > 0);
     m_encoder->finishEncoding();
-    cout << "Finish " << fileName << endl;
+    cout << "Finish " << fileName << endl << endl;
+    delete m_reader;
+    delete m_encoder;
 }
 
 void WAVFileConverter::cleanBuffer() {

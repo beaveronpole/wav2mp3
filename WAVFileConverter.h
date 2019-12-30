@@ -25,7 +25,7 @@ class WAVFileConverter {
 public:
     virtual ~WAVFileConverter();
 
-    WAVFileConverter();
+    WAVFileConverter(uint32_t encodingChunkSize_samples = 4096);
     void processFile(const string& fileName);
 
     // check if file has extension ".wav" or ".wave"

@@ -27,7 +27,7 @@ public:
     // function try to get data from a file
     uint32_t getData(vector<vector<int32_t> *>* buf, uint32_t size_samples) ;
 
-    static uint32_t makeMask(uint32_t bitSize);
+    virtual ~BaseWaveDataReader();
 
 protected:
 
@@ -39,7 +39,6 @@ protected:
     uint32_t m_bitsPerSample;
     uint32_t m_bytesPerSample;
     vector<uint8_t> m_rawBuffer;
-    uint32_t m_mask;
 };
 
 

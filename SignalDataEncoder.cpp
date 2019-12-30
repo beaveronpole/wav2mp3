@@ -17,7 +17,9 @@ SignalDataEncoder::SignalDataEncoder(const string &outputFileName,
     lame_set_mode(m_gfp, static_cast<MPEG_mode>(1));
     lame_set_quality(m_gfp,5);   /* 2=high  5 = medium  7=low */
     int ret_code = lame_init_params(m_gfp);
-    cout << "Ret code = " << ret_code << endl;
+    if (ret_code != 0){
+        cerr << "Error on init Lame params. returns " << ret_code << endl;
+    }
 
     m_mp3bufferSize_bytes = 1.25 * encodingChunkSize_samples + 7200; //some tail for sure
     m_mp3buffer = new uint8_t[m_mp3bufferSize_bytes];
@@ -70,5 +72,7 @@ int32_t SignalDataEncoder::finishEncoding() {
 }
 
 SignalDataEncoder::~SignalDataEncoder() {
+    delete [] m_mp3buffer;
+    lame_close(m_gfp);
     //TODO fill destructor
 }

@@ -81,13 +81,13 @@ struct WAVEFormat{
 
     inline void print(){
         cout << "WAVEFormat:" << endl;
-        cout << "format tag: " << this->formatTag << endl;
-        cout << "channels: " << this->channels << endl;
-        cout << "samples per sec: " << this->samplesPerSec << endl;
-        cout << "avg bytes per sec: " << this->avgBytesPerSec << endl;
-        cout << "data block align: " << this->dataBlockAlign << " bytes" << endl;
-        cout << "bits per sample: " << this->bitsPerSample << endl;
-        cout << "size of the extension: " << this->cbSize << endl;
+        cout << "\tformat tag: " << this->formatTag << endl;
+        cout << "\tchannels: " << this->channels << endl;
+        cout << "\tsamples per sec: " << this->samplesPerSec << endl;
+        cout << "\tavg bytes per sec: " << this->avgBytesPerSec << endl;
+        cout << "\tdata block align: " << this->dataBlockAlign << " bytes" << endl;
+        cout << "\tbits per sample: " << this->bitsPerSample << endl;
+        cout << "\tsize of the extension: " << this->cbSize << endl;
     }
 };
 
