@@ -10,7 +10,7 @@
 using namespace std;
 
 int main() {
-    WAVFileConverter converter(2000000);
+    WAVFileConverter converter(4096);
 //    converter.processFile("./M1F1-int12-AFsp.wav");
 //    converter.processFile("./sine8.wav");
 //    converter.processFile("./sine16.wav");
@@ -24,6 +24,7 @@ int main() {
 //    converter.processFile("./sinefloat64.wav");
 //    converter.processFile("./sine16_broken.wav");
 //    converter.processFile("./8_Channel_ID.wav");
+
     time_t start, stop;
     time(&start);  /* get current time; same as: timer = time(NULL)  */
     converter.processFile("./sine24s_long.wav");
