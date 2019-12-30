@@ -7,6 +7,9 @@
 
 #include "BaseWaveDataReader.h"
 
+/*
+ * Read double (float64) data from file
+ */
 
 class DoubleWaveDataReader : public BaseWaveDataReader {
 protected:

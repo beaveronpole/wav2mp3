@@ -115,21 +115,6 @@ bool WavFileReader::isWAVEFile() {
         return false;
     }
     return m_wavFileDescr.header.fmt.fourcc.check("WAVE");
-    //
-//
-//
-//    //TODO check global status WAV
-//    if (!hasFileEnoughDataForRead(sizeof(FileFormat), m_wavFileDescr.fd) ){
-//        cerr << "Error on reading FORMAT FourCC, file is too small." << endl;
-//        return false;
-//    }
-//
-//    int readStatus = fread(&(m_wavFileDescr.header.fmt), sizeof(FileFormat), 1, m_wavFileDescr.fd);
-//    if (readStatus < 1 || !m_wavFileDescr.header.fmt.fourcc.check("WAVE")){
-//        cerr << "Error on reading file format or file format is not WAVE." << endl;
-//        return false;
-//    }
-//    return true;
 }
 
 void WavFileReader::getFormatDescription(ChunkHeader chunkHeader) {

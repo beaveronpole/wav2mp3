@@ -13,7 +13,7 @@
 #include "DoubleWaveDataReader.h"
 
 /* Creates the correct data reader by given params.
- *
+ * Smth like datareader factory
  */
 
 class WaveDataReaderCreator {

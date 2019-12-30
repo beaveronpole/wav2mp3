@@ -21,6 +21,20 @@
 
 //TODO think about PAD BYTE after chunk data. page 11, first standard
 
+/*
+ * This file  contains a description of a simple WAV file parser with related data structures.
+ *
+ * It can work with several PCM WAV formats:
+ * unsigned 8 bit
+ * signed 16 bit
+ * signed 24 bit
+ * signed 32 bit
+ * float 32 bit
+ * float 64 bit
+ *
+ * It should work with other formats (like unsigned 5 bit, or signed 12 bit, but i have no files to check)
+ */
+
 using namespace std;
 
 //useful thing for RIFF format
@@ -45,6 +59,7 @@ struct ChunkHeader{
     {}
 };
 
+//struct helps to store the data about chunk position with chunk description
 struct ChunkHeaderDescription{
     ChunkHeader header;
     int32_t pos; // position in file of chunk data begin
@@ -54,11 +69,12 @@ struct ChunkHeaderDescription{
     }
 };
 
+// just another name for FourCC for store WAVE
 struct FileFormat{
     FourCC fourcc; //must be WAVE
 };
 
-// 'fmt ' for PCM and FLOAT
+// 'fmt ' for PCM and FLOAT, chunk description
 struct WAVEFormat{
     uint16_t formatTag; // format category
     uint16_t channels; //number of channels
@@ -79,6 +95,7 @@ struct WAVEFormat{
             cbSize(0)
     {}
 
+    //allow us to print format data. It uses only for debugging, so it is not necessary to overload stream operators
     inline void print(){
         cout << "WAVEFormat:" << endl;
         cout << "\tformat tag: " << this->formatTag << endl;
@@ -102,14 +119,15 @@ struct WAVFileHeader{
     {}
 };
 
+// main struct for wav file and state description
 struct WAVFileDescriptor{
     string fileName;
     uint32_t totalFileSize;
     WAVFileHeader header;
-    uint32_t samplesPerChannelInCurrentChunk;
-    uint32_t sampleSize_bytes;
-    bool hasPCMData;
-    bool hasFloatFormat;
+    uint32_t samplesPerChannelInCurrentChunk; // contains calculated value of samples for each channel in current chunk
+    uint32_t sampleSize_bytes; // contains sample size in bytes (12 bit -> 2 bytes)
+    bool hasPCMData; // we work only with PCM-> it should be true
+    bool hasFloatFormat; //if we have deal with float data (format tag == 3) -> it is true
     FILE* fd;
 
     inline WAVFileDescriptor():
@@ -127,8 +145,8 @@ class WavFileReader {
 public:
     explicit WavFileReader(std::string fileName);
 
-    //read data of size from file and put to vector
-    // why is size but not vector capacity? It should be more evident
+    // read data of size (in samples) from the file and put it to the buffer
+    // why is size_samples here but not vector capacity? It should be more evident
     void getData(vector<vector<int32_t> *>* buf, uint32_t size_samples);
 
     inline WAVFileDescriptor getFileInfo(){return m_wavFileDescr;}
@@ -141,51 +159,58 @@ public:
 
     virtual ~WavFileReader();
 
-
 private:
-    //parse file header till the first data chunk if it exists
+    // parse file header to the first data chunk (if it exists)
     void parseWAVFileHead(const string &fileName);
 
-    //find next chunk with name
-    //we can read chunk neatly, because of size 8 bytes
-    //returns chunk header
-    //cursor is set on data of chunk
+    // find next chunk with name "name"
+    // we can read chunk neatly, because of size 8 bytes
+    // returns chunk header
+    // cursor is set on data of chunk
     ChunkHeaderDescription goToNextChunk(FILE *fd, bool fromCurrentPos = true, const string &name = "");
 
-    // function tries to open file, checks extension WAV
+    // function tries to open file
     bool openWavFile(const string &fileName);
 
     // function returns total file size of given file descriptor
     uint32_t getFileSize(FILE* fd);
 
-    //checks if file has WAVE data
+    // checks if file has WAVE data
     bool isWAVEFile();
 
-    //gets format description for PCM data
+    // gets format description for PCM data
     void getFormatDescription(ChunkHeader chunkHeader);
 
-    //get bytes per sample (12bit sample-> 2 bytes)
+    // get bytes per sample (12bit sample-> 2 bytes) (uses its m_wavFileDescr)
     uint32_t getBytesPerSample();
 
-    //
+    // simple calculator of samples per channel using local m_wavFileDescr
     uint32_t getSamplesPerChannel(uint32_t dataSize_bytes);
 
+    // checks if file has enough tail from a current position
     bool hasFileEnoughDataForRead(size_t dataSize, FILE* fd);
 
-    //return remain file size from the cursor position
+    //return remain file size from a current position
     uint32_t getFileTailSize_bytes(FILE* fd);
 
     // helps to read different data types from file with checking available data size in file
     //TODO everywhere put this FUNCTION
     bool readFromFileWithCheck(FILE* fd, uint8_t* buffer, uint32_t dataSize);
 
+    // helps to seek in a file with checking seek status
+    // TODO maybe it is garbage?
     bool seekInFileWithCheck(FILE* fd, uint32_t seekSize, int __whence=SEEK_CUR);
 
     WAVFileDescriptor m_wavFileDescr;
+
+    // contains data reader made by smth like factory (WaveDataReaderCreator)
+    // it is differs for different data type in file (look into folder ./datareaders)
     BaseWaveDataReader* m_datareader;
 
+    // contains the current chunk information (sometimes..)
     ChunkHeaderDescription m_currentChunkHeaderDescription;
 
+    // contains amount of data that was read from current chunk
     uint32_t m_readDataSizeOfCurrentChunk_bytes;
 };
 

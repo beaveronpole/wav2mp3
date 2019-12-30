@@ -7,8 +7,9 @@
 
 #include "BaseWaveDataReader.h"
 
-/* Class for reading signed wave data from given file from given position of given size
- *
+/*
+ * Read signed integer data from file
+ * Sample size may be 9..32 bits (in theory)
  */
 
 class SignedIntWaveDataReader : public BaseWaveDataReader {

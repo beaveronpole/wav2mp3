@@ -1,7 +1,7 @@
-////
-//// Created by beaver on 18.12.2019.
-////
 //
+// Created by beaver on 18.12.2019.
+//
+
 #include "SignedIntWaveDataReader.h"
 
 using namespace std;

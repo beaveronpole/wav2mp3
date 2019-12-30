@@ -18,32 +18,37 @@ using namespace std;
  * This class connects file WavFileReader with SignalDataEncoder
  * Creates output file with the same name
  *
- * WE MUST HAVE ONLY ONE OBJECT FOR ONE THREAD !!!!!!!
+ * WE MUST HAVE ONLY ONE OBJECT FOR EACH THREAD !!!!!!!
  */
 
 class WAVFileConverter {
 public:
-    virtual ~WAVFileConverter();
 
-    WAVFileConverter(uint32_t encodingChunkSize_samples = 4096);
+    explicit WAVFileConverter(uint32_t encodingChunkSize_samples = 4096);
     void processFile(const string& fileName);
 
-    // check if file has extension ".wav" or ".wave"
+    // checks if file has extension ".wav" or ".wave"
     static bool checkExtension(const string& fileName);
 
-    // make file name with mp3 extension from given file name (*.wav)
+    // makes file name with mp3 extension from given file name (*.wav)
     static string makeMP3FileName(const string& fileName);
 
+    virtual ~WAVFileConverter();
+
 private:
+    //dummy function for cleaning buffer of 2 channels
     void cleanBuffer();
 
-    //TODO recreate reader for every new file
+    // creates reader and encoder while processFile function
+    // deletes them there too
     WavFileReader* m_reader;
-
-    //TODO recreate encoder for every new file
     SignalDataEncoder* m_encoder;
 
+    // parameter to store buffer size for putin (joke))
+    // stores data chunk for one encode iteration: read chunk with this size from file -> put this chunk to encoder
     uint32_t m_encodingChunkSize_samples;
+
+    //simple buffer for raw data
     vector<vector<int32_t> *>* m_readerBuf;
 };
 

@@ -16,6 +16,8 @@ using namespace std;
 
 /* class is a smth like adapter for lame function
  * Settings for converting are hardcoded inside the class
+ *
+ * We should create one encoder for each input file.
  */
 
 class SignalDataEncoder {

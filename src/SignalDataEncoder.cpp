@@ -8,7 +8,8 @@ SignalDataEncoder::SignalDataEncoder(const string &outputFileName,
                                      uint32_t channelsCount,
                                      uint32_t samplesPerSec,
                                      uint32_t encodingChunkSize_samples) :
-        m_fd(NULL)
+        m_fd(NULL),
+        m_mp3buffer(NULL)
 {
     m_gfp = lame_init();
     lame_set_num_channels(m_gfp, channelsCount);
@@ -34,11 +35,11 @@ int32_t SignalDataEncoder::putDataForEncoding(int32_t *dataLeft,
                                               int32_t *dataRight,
                                               int32_t dataSize) {
     int encodedSize = lame_encode_buffer_int(m_gfp,
-                                               dataLeft,
-                                               dataRight,
-                                               dataSize,
-                                               m_mp3buffer,
-                                               m_mp3bufferSize_bytes);
+                                             dataLeft,
+                                             dataRight,
+                                             dataSize,
+                                             m_mp3buffer,
+                                             m_mp3bufferSize_bytes);
     cout << "Encode return " << encodedSize << endl;
     if (encodedSize > 0) {
         size_t status = fwrite(m_mp3buffer, encodedSize, 1, m_fd);
@@ -74,5 +75,4 @@ int32_t SignalDataEncoder::finishEncoding() {
 SignalDataEncoder::~SignalDataEncoder() {
     delete [] m_mp3buffer;
     lame_close(m_gfp);
-    //TODO fill destructor
 }
