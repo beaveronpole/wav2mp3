@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <cstdio>
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 
@@ -26,8 +27,7 @@ public:
     // function try to get data from a file
     uint32_t getData(vector<vector<int32_t> *>* buf, uint32_t size_samples) ;
 
-    //simple helper for deletion data vectors
-    static void clearDataVectors(vector< vector<int32_t>* >*);
+    static uint32_t makeMask(uint32_t bitSize);
 
 protected:
 
@@ -39,6 +39,7 @@ protected:
     uint32_t m_bitsPerSample;
     uint32_t m_bytesPerSample;
     vector<uint8_t> m_rawBuffer;
+    uint32_t m_mask;
 };
 
 

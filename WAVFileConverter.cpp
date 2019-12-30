@@ -5,7 +5,10 @@
 #include "WAVFileConverter.h"
 
 WAVFileConverter::WAVFileConverter():
-        m_encodingChunkSize_samples(1024){
+        m_encodingChunkSize_samples(1024000),
+        m_reader(NULL),
+        m_encoder(NULL)
+{
 //TODO set sample chunk size
     m_readerBuf = new vector< vector<int32_t>* >();
 
@@ -49,18 +52,25 @@ void WAVFileConverter::processFile(const string &fileName) {
         return;
     }
 
-    //get file name-> make MP3 file name
-    string outMP3FileName = makeMP3FileName(fileName);
-
     //create file reader
     m_reader = new WavFileReader(fileName);
     WAVFileDescriptor WAVFileInfo = m_reader->getFileInfo();
+    //check RIFF
+    if (!WAVFileInfo.header.ck_id.fourcc.check("RIFF")){
+        //not RIFF format
+        delete m_reader;
+        m_reader = NULL;
+        return;
+    }
+
+    //get file name-> make MP3 file name
+    string outMP3FileName = makeMP3FileName(fileName);
 
     //create file encoder
     m_encoder = new SignalDataEncoder(outMP3FileName,
-            WAVFileInfo.header.descr.channels,
-            WAVFileInfo.header.descr.samplesPerSec,
-            m_encodingChunkSize_samples);
+                                      WAVFileInfo.header.descr.channels,
+                                      WAVFileInfo.header.descr.samplesPerSec,
+                                      m_encodingChunkSize_samples);
 
     // loop for reading  and encoding
     do {
@@ -69,10 +79,16 @@ void WAVFileConverter::processFile(const string &fileName) {
         m_encoder->putDataForEncoding(m_readerBuf->at(0)->data(), m_readerBuf->at(1)->data(), m_readerBuf->at(0)->size());
     } while (m_readerBuf->at(0)->size() > 0);
     m_encoder->finishEncoding();
+    cout << "Finish " << fileName << endl;
 }
 
 void WAVFileConverter::cleanBuffer() {
     m_readerBuf->at(0)->clear();
     m_readerBuf->at(1)->clear();
+}
+
+WAVFileConverter::~WAVFileConverter() {
+    delete m_reader;
+    delete m_encoder;
 }
 

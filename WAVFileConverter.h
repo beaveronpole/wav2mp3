@@ -23,6 +23,8 @@ using namespace std;
 
 class WAVFileConverter {
 public:
+    virtual ~WAVFileConverter();
+
     WAVFileConverter();
     void processFile(const string& fileName);
 

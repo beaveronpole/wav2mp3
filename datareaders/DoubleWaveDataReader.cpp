@@ -13,6 +13,7 @@ void DoubleWaveDataReader::fillDataStorage(vector<uint8_t> *rawBuf,
     //TODO check file size and data size
     //TODO check if EOF
     //TODO think about stream encoding
+
     for (int i = 0, ch = 0 ;
          i < rawBufDataSize;
          i += m_bytesPerSample, ch = i%(m_channelsCount*m_bytesPerSample)==0?0:(ch+1)){

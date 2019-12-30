@@ -86,6 +86,7 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
         cerr << "File has not RIFF data inside. " << endl;
         return;
     }
+    m_wavFileDescr.header.ck_id = chunkHeaderTmp.header;
     if (!isWAVEFile()) return;
     chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, true, "fmt ");
     m_currentChunkHeaderDescription = chunkHeaderTmp;
@@ -335,42 +336,14 @@ bool WavFileReader::seekInFileWithCheck(FILE *fd, uint32_t seekSize, int __whenc
 }
 
 void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size_samples) {
-    //TODO read several data chunks
+    //TODO think about reading LIST with silence and data
 
     int32_t availableInCurrentChunk_samples = m_wavFileDescr.samplesPerChannelInCurrentChunk - m_readDataSizeOfCurrentChunk_bytes/m_wavFileDescr.header.descr.dataBlockAlign;
-
     if (availableInCurrentChunk_samples <= 0){
-        //no samples in current chunk!
-        //if no data lost- go to next chunk
-        ChunkHeaderDescription chunkHeaderTmp;
-        do {
-            chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, false);
-            m_currentChunkHeaderDescription = chunkHeaderTmp;
-            if (chunkHeaderTmp.header.size == 0){ //no more chunks in file
-                return;
-            }
-
-            //check if DATA
-            if (chunkHeaderTmp.header.fourcc.check("data")) {
-                m_readDataSizeOfCurrentChunk_bytes = 0;
-                uint32_t fileTailSize_bytes = getFileTailSize_bytes(m_wavFileDescr.fd);
-                m_wavFileDescr.samplesPerChannelInCurrentChunk = getSamplesPerChannel(
-                        min(fileTailSize_bytes, chunkHeaderTmp.header.size));
-                break;
-            }
-
-            //check if silence
-            else if (chunkHeaderTmp.header.fourcc.check("slnt")) {
-                //get count of silence SAMPLES!!! for all channels
-                //TODO do smth here  if silence chunk. now skip
-                continue;
-            }
-        } while(true);
+        return;
     }
-
     //read samples from current chunk
     {
-
         //TODO calculate data size available for reading
         //TODO if we are in silence- read fake silence data
         int32_t countForRead_samples = std::min(availableInCurrentChunk_samples, (int32_t)size_samples);
@@ -383,6 +356,7 @@ void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size_sample
 }
 
 WavFileReader::~WavFileReader() {
-//TODO fill destructor
+    //TODO fill destructor
+    fclose(m_wavFileDescr.fd);
 }
 
