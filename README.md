@@ -20,6 +20,8 @@ No result yet! It is in progress.
 10. make cross platform settings
 
 
+
+
 # Description
 
 Now it is an ugly code, but it will be better soon
