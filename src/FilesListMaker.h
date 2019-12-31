@@ -10,6 +10,7 @@
 #include <string>
 #include <cstring>
 #include <iostream>
+#include <cstdlib>
 
 /*
  * Class makes list of files for a given directory

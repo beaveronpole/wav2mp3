@@ -13,8 +13,11 @@ list<string> FilesListMaker::makeFilesList(const string& directory) {
             if (strcmp(".", ent->d_name)==0 || strcmp("..", ent->d_name)==0){
                 continue;
             }
-            cout << "got name = " << ent->d_name << endl;
-            outList.push_back(string(ent->d_name));
+            char resolved[PATH_MAX];
+            realpath(directory.c_str(), resolved);
+            string gotFilePath(string(resolved) + PATH_SEPARATOR + string(ent->d_name));
+            cout << "got name = " << gotFilePath << endl;
+            outList.push_back(gotFilePath);
         }
         closedir (dir);
     } else {
