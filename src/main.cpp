@@ -4,23 +4,28 @@
 
 #include "lame/lame.h"
 #include "WAVFileConverter.h"
+#include "FilesListMaker.h"
+#include "WAVFilesConverter.h"
 
 #include <ctime>
 
 using namespace std;
 
-int main() {
-    WAVFileConverter converter(4096);
-    converter.processFile("./M1F1-int12-AFsp.wav");
-    converter.processFile("./sine8.wav");
-    converter.processFile("./sine16.wav");
-    converter.processFile("./sine24.wav");
-    converter.processFile("./sine24s.wav");
-    converter.processFile("./sine32.wav");
-    converter.processFile("./sinefloat.wav");
-    converter.processFile("./sinefloat64.wav");
-    converter.processFile("./sine16_broken.wav");
-    converter.processFile("./8_Channel_ID.wav");
+int main(int argc, char** argv) {
+    list<string> filesList;
+    if (argc > 1) {
+        filesList = FilesListMaker::makeFilesList(argv[1]);
+    }
+    else{
+        cerr << "No directory set. You should run the program with first parameter contains directory with files for encoding: wav2mp3 ./directory/directory" << endl;
+        return 0;
+    }
+    cout << "Got files list size = " << filesList.size() << endl;
+
+    WAVFileConverter converter(4096000);
+    for (list<string>::iterator itr = filesList.begin(); itr != filesList.end(); itr++){
+        converter.processFile(*itr);
+    }
 
 //    time_t start, stop;
 //    time(&start);  /* get current time; same as: timer = time(NULL)  */
