@@ -27,6 +27,8 @@ int main(int argc, char** argv) {
         converter.processFile(*itr);
     }
 
+    WAVFilesConverter flsConv;
+
 //    time_t start, stop;
 //    time(&start);  /* get current time; same as: timer = time(NULL)  */
 //    converter.processFile("./sine24s_long.wav");

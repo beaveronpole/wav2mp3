@@ -10,6 +10,8 @@
 #include <list>
 #include <string>
 
+#include <unistd.h>
+
 #include "WAVFileConverter.h"
 
 /*
