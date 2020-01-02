@@ -40,7 +40,7 @@ int32_t SignalDataEncoder::putDataForEncoding(int32_t *dataLeft,
                                              dataSize,
                                              m_mp3buffer,
                                              m_mp3bufferSize_bytes);
-    cout << "Encode return " << encodedSize << endl;
+//    cout << "Encode return " << encodedSize << endl;
     if (encodedSize > 0) {
         size_t status = fwrite(m_mp3buffer, encodedSize, 1, m_fd);
         if (status != 1){
@@ -67,7 +67,7 @@ int32_t SignalDataEncoder::finishEncoding() {
             return -1;
         }
     }
-    cout << "Encode flush return " << returnFlush << endl;
+//    cout << "Encode flush return " << returnFlush << endl;
     fclose(m_fd);
     return 0;
 }

@@ -10,7 +10,7 @@ using namespace std;
 WavFileReader::WavFileReader(std::string fileName):
         m_datareader(NULL){
     parseWAVFileHead(fileName);
-    cout << "Samples per channel = " << m_wavFileDescr.samplesPerChannelInCurrentChunk << endl;
+//    cout << "Samples per channel = " << m_wavFileDescr.samplesPerChannelInCurrentChunk << endl;
     //TODO try to read silence
     //TODO check file size and data size
     //TODO skip channels more than 2
@@ -175,7 +175,7 @@ void WavFileReader::getFormatDescription(ChunkHeader chunkHeader) {
                                 sizeof(m_wavFileDescr.header.descr.cbSize) ))
         return;
 
-    m_wavFileDescr.header.descr.print();
+//    m_wavFileDescr.header.descr.print();
 }
 
 bool WavFileReader::hasFileEnoughDataForRead(size_t dataSize, FILE* fd) {
