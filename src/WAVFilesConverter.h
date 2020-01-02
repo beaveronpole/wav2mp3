@@ -17,7 +17,12 @@
 #include "ConverterWorker.h"
 
 /*
- * Class makes several workers to encode file from given list
+ * Class makes several workers to encode file from given list.
+ * Class is made as singleton for more convenient use
+ *
+ * Class creates an array of workers with size of optimal threads count.
+ * Then gets a list of file names for encoding
+ * after startEncoding we should call wait function- it allow to finish the program right after encoding finishes
  */
 
 
@@ -25,34 +30,45 @@ class WAVFilesConverter {
 public:
     //as in C++98 there is no closure (bind)- we use singleton in this case. In C++11> we would use bind from functional for this purposes.
     static WAVFilesConverter* instance();
+
+    //callback on worker finished the task. The worker can get a new task here
     static void workerFinishCallBack(uint32_t workerUID);
+
+    //inits worker array and gives tast to workers
     void startEncoding(list<string>* files);
+
+    //wait until all workers finished
     void wait();
 
     virtual ~WAVFilesConverter();
 
 private:
-
+    //singleton constructor
     WAVFilesConverter();
-    static WAVFilesConverter* m_instance;
 
-    //manager
-
-    //worker
-
-    //workers array
-
+    //creates worker array
     void init(uint32_t threadCount);
-    map<uint32_t, ConverterWorker*> m_workers;
 
+    //tells all workers to stop (not kill them, just ask)
     void stopAllWorkers();
 
+    //returns an optimal number of threads
+    static int getNumCPU();
+
+    //singleton instance of class
+    static WAVFilesConverter* m_instance;
+
+    //array of workers. Why map? Because we store there UIDs of worker, who knows how it gives us IDs.. it could be random, of smth else
+    map<uint32_t, ConverterWorker*> m_workers;
+
+    //locker for list of files
     pthread_mutex_t m_mutexCurrentFileNameIterator;
+
+    //store a current iterator in files list
     list<string>::iterator m_currentFileName;
+
+    //list of files. Why pointer? Why not)
     list<string>* m_files;
-
-    static void* waitFunction(void* args);
-
 };
 
 

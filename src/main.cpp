@@ -1,9 +1,5 @@
 #include <iostream>
-#include <cstdlib>
 
-
-#include "lame/lame.h"
-#include "WAVFileConverter.h"
 #include "FilesListMaker.h"
 #include "WAVFilesConverter.h"
 
@@ -22,15 +18,10 @@ int main(int argc, char** argv) {
     }
     cout << "Got files list size = " << filesList.size() << endl;
 
-//    WAVFileConverter converter(4096000);
-//    for (list<string>::iterator itr = filesList.begin(); itr != filesList.end(); itr++){
-//        converter.processFile(*itr);
-//    }
-
     WAVFilesConverter* flsConv = WAVFilesConverter::instance();
     flsConv->startEncoding(&filesList);
     flsConv->wait();
-    cout << "After wait function!" << endl;
+    cout << "Finish encoding files" << endl;
 
 //    time_t start, stop;
 //    time(&start);  /* get current time; same as: timer = time(NULL)  */
