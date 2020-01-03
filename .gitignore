@@ -1,6 +1,9 @@
 /lame-3.100/
-/cmake-build-debug/
 /build/*.mp3
 /build/wav2mp3
 /src/cmake-build-debug/
 /build/sine24s_long.wav
+/src/CMakeFiles/
+/src/cmake_install.cmake
+/src/CMakeCache.txt
+/src/Makefile
