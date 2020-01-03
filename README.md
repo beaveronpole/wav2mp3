@@ -70,10 +70,10 @@ so we have to put last three libraries to our build folder. Libraries are in the
 
 
 **2.** The second way to run it separately- to add to your environment variable PATH the path to the libraries `PATH=PATH;your_cygwin_folder\bin` :
-..* run `cmd` in Windows    
-..* run  `PATH=PATH;your_cygwin_folder\bin` (your_cygwin_folder is your cygwin folder)
-..* go to the `wav2mp3.exe` binary
-..* run it with a directory containing *.wav files.
+* run `cmd` in Windows    
+* run  `PATH=PATH;your_cygwin_folder\bin` (your_cygwin_folder is your cygwin folder)
+* go to the `wav2mp3.exe` binary
+* run it with a directory containing *.wav files.
 
 
  
