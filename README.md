@@ -11,7 +11,7 @@ The project contains WAV file parser for data types:
 - float 32 bit
 - float 64 bit
 
-*It should works and for unsigned 2..7 bit data, and signed 9..31 data, but i have no files to check.*
+*It should work for unsigned 2..7 bit data, and signed 9..31 data, but i have no files to check.*
 
 To start encoding we should run the program with args like: `wav2mp3 ./directory_with_wav_files`
 
