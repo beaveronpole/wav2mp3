@@ -2,6 +2,7 @@
 /build/*.mp3
 /build/wav2mp3
 /src/cmake-build-debug/
+/src/cmake-build-release/
 /build/sine24s_long.wav
 /src/CMakeFiles/
 /src/cmake_install.cmake
