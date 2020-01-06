@@ -16,13 +16,12 @@ list<string> FilesListMaker::makeFilesList(const string& directory) {
             char resolved[PATH_MAX];
             realpath(directory.c_str(), resolved);
             string gotFilePath(string(resolved) + PATH_SEPARATOR + string(ent->d_name));
-            cout << "got name = " << gotFilePath << endl;
             outList.push_back(gotFilePath);
         }
         closedir (dir);
     } else {
         /* could not open directory */
-        cerr << "Error in opening directory : " << directory << endl;
+        SIMPLE_LOGGER.showError("Error in opening directory : " + directory + "\n");
     }
     return outList;
 }

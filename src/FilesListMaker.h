@@ -12,6 +12,8 @@
 #include <iostream>
 #include <cstdlib>
 
+#include "SimpleLogger.h"
+
 /*
  * Class makes list of files for a given directory
  */

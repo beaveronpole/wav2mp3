@@ -9,7 +9,6 @@ WAVFileConverter::WAVFileConverter(uint32_t encodingChunkSize_samples) :
         m_reader(NULL),
         m_encoder(NULL)
 {
-    //TODO set sample chunk size
     m_readerBuf = new vector< vector<int32_t>* >();
 
     // as we work with only 2 channels
@@ -47,19 +46,18 @@ string WAVFileConverter::makeMP3FileName(const string &fileName) {
 }
 
 void WAVFileConverter::processFile(const string &fileName) {
-    cout << "Start file = " << fileName << endl;
-
     if (!checkExtension(fileName)){
         return;
     }
+    SIMPLE_LOGGER.addLine("Start: \t" + fileName + " ...\n");
 
     //create file reader
-    //TODO check creation of m_reader
-    m_reader = new WavFileReader(fileName);
+    m_reader = new WavFileReader(fileName); // if it throws bad_alloc - we can nothing to do, and will exit the app...
     WAVFileDescriptor WAVFileInfo = m_reader->getFileInfo();
     //check RIFF
     if (!WAVFileInfo.header.ck_id.fourcc.check("RIFF")){
         //not RIFF format
+        SIMPLE_LOGGER.flush();
         delete m_reader;
         m_reader = NULL;
         return;
@@ -69,7 +67,7 @@ void WAVFileConverter::processFile(const string &fileName) {
     string outMP3FileName = makeMP3FileName(fileName);
 
     //create file encoder
-    //TODO check creation of m_encoder
+    // if it throws bad_alloc - we can nothing to do, and will exit the app...
     m_encoder = new SignalDataEncoder(outMP3FileName,
                                       WAVFileInfo.header.descr.channels,
                                       WAVFileInfo.header.descr.samplesPerSec,
@@ -82,11 +80,12 @@ void WAVFileConverter::processFile(const string &fileName) {
         m_encoder->putDataForEncoding(m_readerBuf->at(0)->data(), m_readerBuf->at(1)->data(), m_readerBuf->at(0)->size());
     } while (m_readerBuf->at(0)->size() > 0);
     m_encoder->finishEncoding();
-    cout << "Finish " << fileName << endl << endl;
+    string status = m_reader->status() == WavFileReader::WAVEFILEREADER_STATUS_OK ? "OK! " : "FAIL ";
+    SIMPLE_LOGGER.addLine(status + " \t" + fileName + "\n");
     delete m_reader;
     delete m_encoder;
 
-    //for destructor call on bad_alloc
+    //for correct destructor call
     m_reader = NULL;
     m_encoder = NULL;
 }

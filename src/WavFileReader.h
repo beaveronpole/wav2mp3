@@ -143,7 +143,7 @@ struct WAVFileDescriptor{
 
 class WavFileReader {
 public:
-    explicit WavFileReader(std::string fileName);
+    explicit WavFileReader(const string &fileName);
 
     // read data of size (in samples) from the file and put it to the buffer
     // why is size_samples here but not vector capacity? It should be more evident
@@ -156,6 +156,13 @@ public:
         WAVE_FORMAT_PCM = 1, //work only with simple integer PCM data, as it is a test task
         WAVE_FORMAT_FLOAT = 3 //work with float data
     };
+
+    enum WaveFileReaderStatus{
+        WAVEFILEREADER_STATUS_OK,
+        WAVEFILEREADER_STATUS_FAIL,
+    };
+
+    inline WaveFileReaderStatus status() {return m_status;}
 
     virtual ~WavFileReader();
 
@@ -212,6 +219,8 @@ private:
 
     // contains amount of data that was read from current chunk
     uint32_t m_readDataSizeOfCurrentChunk_bytes;
+
+    WaveFileReaderStatus m_status;
 };
 
 

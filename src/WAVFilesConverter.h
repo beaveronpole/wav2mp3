@@ -37,7 +37,7 @@ public:
     //inits worker array and gives tast to workers
     void startEncoding(list<string>* files);
 
-    //wait until all workers finished
+    //wait until all workers finished. And delete finished workers
     void wait();
 
     virtual ~WAVFilesConverter();
@@ -47,7 +47,7 @@ private:
     WAVFilesConverter();
 
     //creates worker array
-    void init(uint32_t threadCount);
+    bool init(uint32_t threadCount);
 
     //tells all workers to stop (not kill them, just ask)
     void stopAllWorkers();

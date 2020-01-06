@@ -11,6 +11,7 @@
 #include "UnsignedIntWaveDataReader.h"
 #include "FloatWaveDataReader.h"
 #include "DoubleWaveDataReader.h"
+#include "../SimpleLogger.h"
 
 /* Creates the correct data reader by given params.
  * Smth like datareader factory

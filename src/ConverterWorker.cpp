@@ -6,26 +6,38 @@
 
 uint32_t ConverterWorker::ConverterWorkerUID = 0;
 
-ConverterWorker::ConverterWorker(void (*finishCallBack)(uint32_t)) {
+ConverterWorker::ConverterWorker(void (*finishCallBack)(uint32_t)):
+        m_canWork(false){
     m_finishCallBack = finishCallBack;
     m_uid = ConverterWorkerUID++;
     m_converter = new WAVFileConverter(4096);
-    initPthread();
+    m_canWork = initPthread();
 }
 
-void ConverterWorker::initPthread() {
+bool ConverterWorker::initPthread() {
     m_threadActive = true;
 
-    pthread_mutex_init(&m_startConvertingMutex, NULL);
-    pthread_cond_init(&m_startConvertingCondition, NULL);
+    int status_mutex = pthread_mutex_init(&m_startConvertingMutex, NULL);
+    if (status_mutex != 0){
+        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex).\n");
+        return false;
+    }
+    int status_cond = pthread_cond_init(&m_startConvertingCondition, NULL);
+    if (status_cond != 0){
+        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (condition).\n");
+        return false;
+    }
 
     int err = pthread_create(&m_workerThread, NULL,
                              &ConverterWorker::workerFunction, this);
-
+    if (err != 0){
+        SIMPLE_LOGGER.showError("error on creation worker thread.\n");
+        return false;
+    }
+    return true;
 }
 
 void ConverterWorker::start(const string &fileName) {
-    cout << "Start file encoding " << fileName << " uid = " << this->m_uid << endl;
     //send signal to start the function
     m_processFileName = fileName;
     pthread_cond_signal(&m_startConvertingCondition);
@@ -46,11 +58,11 @@ void* ConverterWorker::workerFunction(void* args) {
         //process
         string currentFileName = object->m_processFileName;
         object->m_converter->processFile(currentFileName);
-        cout << "Worker " << object->m_uid << " finish with file name = " << currentFileName << endl;
         object->m_processFileName = "";
         object->m_finishCallBack(object->m_uid);
     }
-    cout << "********* Totally Finish worker UID = " << object->m_uid << endl;
+    // if we want to know when worker finished its life
+//    SIMPLE_LOGGER.show("*** Worker retired UID: " + toStr(object->m_uid) + "\n");
     return NULL;
 }
 
@@ -62,6 +74,7 @@ void ConverterWorker::stop() {
 
 ConverterWorker::~ConverterWorker() {
     //TODO check returns
+    //TODO check is lock
     pthread_mutex_destroy(&m_startConvertingMutex);
     pthread_cond_destroy(&m_startConvertingCondition);
     delete m_converter;

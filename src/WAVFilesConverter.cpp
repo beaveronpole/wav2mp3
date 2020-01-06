@@ -10,20 +10,35 @@ WAVFilesConverter::WAVFilesConverter() {
     //TODO sort files from SIZe!!!!!!! to make process more fast (first-last to 1 thread)
 }
 
-void WAVFilesConverter::init(uint32_t threadCount) {
+bool WAVFilesConverter::init(uint32_t threadCount) {
     ConverterWorker* newWorker = NULL;
-    pthread_mutex_init(&m_mutexCurrentFileNameIterator, NULL);
+    int status_mutex = pthread_mutex_init(&m_mutexCurrentFileNameIterator, NULL);
+    if (status_mutex != 0){
+        SIMPLE_LOGGER.showError("error on init mutex CurrentFileNameIterator in WAVFilesConverter.\n");
+        return false;
+    }
     for (uint32_t i = 0; i < threadCount; i++){
         newWorker = new ConverterWorker(workerFinishCallBack);
+        if (!newWorker->canWork()){
+            return false;
+        }
         m_workers[newWorker->uid()] = newWorker;
     }
+    return true;
 }
 
 void WAVFilesConverter::startEncoding(list<string>* files) {
-    init(getNumCPU()); //init here, for restart encoding. If Init in constructor- we have to reinit manually
+    //create worker count as minimum(files count (any in list, we know nothing about them here) <-> optimal thread count)
+    int maxThreads = min((int)files->size(), getNumCPU());
+    if (!init(maxThreads)) //init here, for restart encoding. If Init in constructor- we have to reinit manually
+    {
+        SIMPLE_LOGGER.showError("error in converter initialization.\n");
+        return;
+    }
     m_files = files;
     if (files->empty()){
-        cerr << "No files in list"<<endl;
+        SIMPLE_LOGGER.showError("No files in list.\n");
+        stopAllWorkers();
         return;
     }
     m_currentFileName = files->begin();
@@ -50,6 +65,7 @@ void WAVFilesConverter::startEncoding(list<string>* files) {
 void WAVFilesConverter::workerFinishCallBack(uint32_t workerUID) {
     WAVFilesConverter* object = WAVFilesConverter::instance();
     pthread_mutex_lock( &(object->m_mutexCurrentFileNameIterator));
+    SIMPLE_LOGGER.flush();
     if (!(object->m_currentFileName == object->m_files->end()) ){
         object->m_workers[workerUID]->start(*object->m_currentFileName);
         object->m_currentFileName++;
@@ -78,12 +94,11 @@ void WAVFilesConverter::stopAllWorkers() {
 }
 
 void WAVFilesConverter::wait() {
-    cout << "start wait function!" << endl;
     for (map<uint32_t, ConverterWorker*>::iterator itr = m_workers.begin();
          itr != m_workers.end();
          itr++){
         pthread_join(*itr->second->getThread(), NULL);
-        delete itr->second;
+        delete itr->second; // delete finished worker
         itr->second = NULL;
     }
     m_workers.clear();
@@ -92,14 +107,7 @@ void WAVFilesConverter::wait() {
 int WAVFilesConverter::getNumCPU() {
     //for linux
     int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
-    cout << "optimal threads count = " << numCPU << endl;
-
-
-    /* on windows?
-     * SYSTEM_INFO sysinfo;
-     * GetSystemInfo(&sysinfo);
-     * int numCPU = sysinfo.dwNumberOfProcessors;
-     */
+    SIMPLE_LOGGER.show("Optimal threads count: " + toStr(numCPU) + "\n");
     return numCPU;
 }
 
@@ -108,5 +116,7 @@ WAVFilesConverter::~WAVFilesConverter() {
     stopAllWorkers();
     //TODO clean m_workers
     wait();
+    pthread_mutex_destroy(&m_mutexCurrentFileNameIterator);
+    m_instance = NULL;
 }
 

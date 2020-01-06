@@ -22,6 +22,8 @@ public:
     //stop the loop of thread and thread
     void stop();
 
+    inline bool canWork() {return m_canWork;}
+
     inline pthread_t* getThread(){return &m_workerThread;}
 
     inline uint32_t uid() {return m_uid;}
@@ -34,7 +36,7 @@ private:
     uint32_t m_uid;
 
     //init phtread for worker
-    void initPthread();
+    bool initPthread();
 
     //main function for converting
     static void* workerFunction(void* args);
@@ -49,6 +51,7 @@ private:
     string m_processFileName;
 
     WAVFileConverter* m_converter;
+    bool m_canWork;
 };
 
 

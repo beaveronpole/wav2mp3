@@ -16,6 +16,8 @@
 #include <iostream>
 #include <cmath>
 
+#include "../SimpleLogger.h"
+
 using namespace std;
 
 class BaseWaveDataReader {
@@ -23,7 +25,7 @@ public:
     explicit BaseWaveDataReader();
     void init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample, uint32_t bytesPerSample);
 
-    // interface function try to get data from a file
+    // interface function try to get data of size_samples (in samples, converts to bytes inside) from a file
     uint32_t getData(vector<vector<int32_t> *>* buf, uint32_t size_samples) ;
 
     virtual ~BaseWaveDataReader();

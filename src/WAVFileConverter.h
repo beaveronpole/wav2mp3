@@ -10,6 +10,7 @@
 
 #include "WavFileReader.h"
 #include "SignalDataEncoder.h"
+#include "SimpleLogger.h"
 
 
 using namespace std;

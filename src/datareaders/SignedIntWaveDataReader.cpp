@@ -10,7 +10,6 @@ void SignedIntWaveDataReader::fillDataStorage(vector<uint8_t> *rawBuf,
                                               uint32_t rawBufDataSize,
                                               vector<vector<int32_t> *> *dataOut) {
     // on start all variables are checked in parent's getData
-    //TODO try to read silence
     uint8_t shift_value = 8*sizeof(int32_t) - m_bitsPerSample;
     int32_t value = 0;
     for (int i = 0, ch = 0;

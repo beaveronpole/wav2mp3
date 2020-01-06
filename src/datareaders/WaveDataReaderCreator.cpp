@@ -14,8 +14,7 @@ BaseWaveDataReader *WaveDataReaderCreator::createDataReader(uint32_t bitsPerSamp
     else if (bitsPerSample > 8) {
         return new SignedIntWaveDataReader();
     }
-    else if (bitsPerSample <= 8 && bitsPerSample > 0)
+    else if (bitsPerSample > 1 && bitsPerSample <= 8 && bitsPerSample > 0)
         return new UnsignedIntWaveDataReader();
-    cerr << "Error on creation wave data reader. Smth weird: is float = " << isFloat << ", bitSize = " << bitsPerSample << endl;
     return NULL;
 }

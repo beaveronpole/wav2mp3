@@ -19,7 +19,7 @@ SignalDataEncoder::SignalDataEncoder(const string &outputFileName,
     lame_set_quality(m_gfp,5);   /* 2=high  5 = medium  7=low */
     int ret_code = lame_init_params(m_gfp);
     if (ret_code != 0){
-        cerr << "Error on init Lame params. returns " << ret_code << endl;
+        SIMPLE_LOGGER.addErrorLine("Error on init Lame params. returns " + toStr(ret_code) + "\n");
     }
 
     m_mp3bufferSize_bytes = 1.25 * encodingChunkSize_samples + 7200; //some tail for sure
@@ -27,7 +27,7 @@ SignalDataEncoder::SignalDataEncoder(const string &outputFileName,
 
     m_fd = fopen(outputFileName.c_str(), "w");
     if (m_fd == NULL){
-        cerr << "Error on creating output MP3 file with name = " << outputFileName << endl;
+        SIMPLE_LOGGER.addErrorLine("Error on creating output MP3 file with name = " + outputFileName + "\n");
     }
 }
 
@@ -40,11 +40,10 @@ int32_t SignalDataEncoder::putDataForEncoding(int32_t *dataLeft,
                                              dataSize,
                                              m_mp3buffer,
                                              m_mp3bufferSize_bytes);
-//    cout << "Encode return " << encodedSize << endl;
     if (encodedSize > 0) {
         size_t status = fwrite(m_mp3buffer, encodedSize, 1, m_fd);
         if (status != 1){
-            cerr << "Error on writing output file" << endl;
+            SIMPLE_LOGGER.addErrorLine("Error on writing output file.\n");
             fclose(m_fd);
             m_fd = NULL;
             return -1;
@@ -61,13 +60,12 @@ int32_t SignalDataEncoder::finishEncoding() {
     if (returnFlush > 0) {
         size_t status = fwrite(m_mp3buffer, returnFlush, 1, m_fd);
         if (status != 1){
-            cerr << "Error on writing output file" << endl;
+            SIMPLE_LOGGER.addErrorLine("Error on writing output file.\n");
             fclose(m_fd);
             m_fd = NULL;
             return -1;
         }
     }
-//    cout << "Encode flush return " << returnFlush << endl;
     fclose(m_fd);
     return 0;
 }

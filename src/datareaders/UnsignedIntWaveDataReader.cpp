@@ -7,7 +7,6 @@
 void UnsignedIntWaveDataReader::fillDataStorage(vector<uint8_t> *rawBuf, uint32_t rawBufDataSize,
                                                 vector<vector<int32_t> *> *dataOut) {
     // on start all variables are checked in parent's getData
-    //TODO think about 1bit smth
     uint8_t shift_value = 32 - m_bitsPerSample;
     int32_t midValue = pow(2, m_bitsPerSample-1);
     for (int i = 0, ch = 0 ;

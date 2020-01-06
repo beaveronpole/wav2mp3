@@ -11,6 +11,7 @@
 #include <cstdio>
 
 #include "lame/lame.h"
+#include "SimpleLogger.h"
 
 using namespace std;
 

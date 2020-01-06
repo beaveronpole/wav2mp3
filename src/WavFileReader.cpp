@@ -7,19 +7,18 @@
 
 using namespace std;
 
-WavFileReader::WavFileReader(std::string fileName):
-        m_datareader(NULL){
+WavFileReader::WavFileReader(const string &fileName):
+        m_datareader(NULL),
+        m_status(WAVEFILEREADER_STATUS_OK){
+    m_wavFileDescr.fileName = fileName;
     parseWAVFileHead(fileName);
-//    cout << "Samples per channel = " << m_wavFileDescr.samplesPerChannelInCurrentChunk << endl;
-    //TODO try to read silence
-    //TODO check file size and data size
-    //TODO skip channels more than 2
-    //TODO check if EOF
-    //TODO think about stream encoding
+
+    // if data in header unsupported - m_datareader will be NULL after call createDataReader
     m_datareader = WaveDataReaderCreator::createDataReader(m_wavFileDescr.header.descr.bitsPerSample,
             m_wavFileDescr.hasFloatFormat);
     if (m_datareader == NULL){
-        cerr << "Unsupported format." << endl;
+        SIMPLE_LOGGER.addErrorLine("Unsupported file format in " + fileName + "\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
         return;
     }
     m_datareader->init(m_wavFileDescr.fd, m_wavFileDescr.header.descr.channels,
@@ -28,41 +27,48 @@ WavFileReader::WavFileReader(std::string fileName):
 
 void WavFileReader::parseWAVFileHead(const string &fileName) {
     ChunkHeaderDescription chunkHeaderTmp;
-    if (!openWavFile(fileName)) return;
+    if (!openWavFile(fileName)) {
+        m_status = WAVEFILEREADER_STATUS_FAIL;
+        return;
+    }
     m_wavFileDescr.totalFileSize = getFileSize(m_wavFileDescr.fd);
     if (m_wavFileDescr.totalFileSize == 0){
-        cerr << "Error. File size is zero" << endl;
+        SIMPLE_LOGGER.addErrorLine("Error. File size is zero\n");
         fclose(m_wavFileDescr.fd);
+        m_status = WAVEFILEREADER_STATUS_FAIL;
         return;
     }
     chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, true);
     if (!chunkHeaderTmp.header.fourcc.check("RIFF")){
-        cerr << "File has not RIFF data inside. " << endl;
+        SIMPLE_LOGGER.addErrorLine("File has not RIFF data inside.\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
         return;
     }
     m_wavFileDescr.header.ck_id = chunkHeaderTmp.header;
-    if (!isWAVEFile()) return;
+    if (!isWAVEFile()) {
+        m_status = WAVEFILEREADER_STATUS_FAIL;
+        return;
+    }
     chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, true, "fmt ");
     m_currentChunkHeaderDescription = chunkHeaderTmp;
     getFormatDescription(chunkHeaderTmp.header);
-    if (!m_wavFileDescr.hasPCMData) return;
+    if (!m_wavFileDescr.hasPCMData) {
+        m_status = WAVEFILEREADER_STATUS_FAIL;
+        return;
+    }
 
     chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, false, "data");
     m_currentChunkHeaderDescription = chunkHeaderTmp;
     // check if file size more than size in chunk
     if (chunkHeaderTmp.header.size == 0){ // no data
+        m_status = WAVEFILEREADER_STATUS_FAIL;
         return;
     }
     m_readDataSizeOfCurrentChunk_bytes = 0;
 
     // TODO check ALL read returns
 
-    // TODO check if file has enough length every time
-
-    // TODO make simple function for every step
-
     m_wavFileDescr.sampleSize_bytes = getBytesPerSample();
-    //TODO get real data size in chunk
     uint32_t fileTailSize_bytes = getFileTailSize_bytes(m_wavFileDescr.fd);
     m_wavFileDescr.samplesPerChannelInCurrentChunk = getSamplesPerChannel(chunkHeaderTmp.header.size > fileTailSize_bytes ? fileTailSize_bytes : chunkHeaderTmp.header.size);
 }
@@ -79,29 +85,28 @@ bool WavFileReader::openWavFile(const string &fileName) {
 }
 
 uint32_t WavFileReader::getFileSize(FILE *fd) {
-    // TODO is return 0 close file
     if (fd == NULL){
-        cerr << "Error. File descriptor is not open." << endl;
+        SIMPLE_LOGGER.addErrorLine("Error. File descriptor is not open.\n");
         return 0;
     }
     int32_t cur_pos = ftell(fd); //save the position on enter
     if (cur_pos < 0){
-        strerror(errno);
+        SIMPLE_LOGGER.addErrorLine("Error on reading file.\n");
         return 0;
     }
     int32_t status = fseek(fd, 0, SEEK_END);
     if (status != 0){
-        strerror(errno);
+        SIMPLE_LOGGER.addErrorLine("Error on reading file.\n");
         return 0;
     }
     int32_t fileSize = ftell(fd);
     if (fileSize < 0){
-        strerror(errno);
+        SIMPLE_LOGGER.addErrorLine("Error on reading file.\n");
         return 0;
     }
     status = fseek(fd, cur_pos, SEEK_SET); //set back to position on enter
     if (status != 0){
-        strerror(errno);
+        SIMPLE_LOGGER.addErrorLine("Error on reading file.\n");
         return 0;
     }
     return fileSize;
@@ -121,7 +126,6 @@ void WavFileReader::getFormatDescription(ChunkHeader chunkHeader) {
     //we are at fmt chunk
     m_wavFileDescr.header.ck_fmt = chunkHeader;
 
-    //TODO check format HERE!!!
     //read format tag
     if (!readFromFileWithCheck(m_wavFileDescr.fd,
                                (uint8_t*)&(m_wavFileDescr.header.descr.formatTag),
@@ -203,6 +207,17 @@ uint32_t WavFileReader::getBytesPerSample() {
 
 uint32_t WavFileReader::getSamplesPerChannel(uint32_t dataSize_bytes) {
     //TODO check channels is ZERO
+    if (m_wavFileDescr.header.descr.channels == 0){
+        SIMPLE_LOGGER.addErrorLine("Error in channels count.\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
+        return 0;
+    }
+    if (m_wavFileDescr.sampleSize_bytes == 0){
+        SIMPLE_LOGGER.addErrorLine("Error in sample size.\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
+        return 0;
+    }
+    // dont want to divide by zero...
     return dataSize_bytes / m_wavFileDescr.header.descr.channels / m_wavFileDescr.sampleSize_bytes;
 }
 
@@ -221,7 +236,7 @@ ChunkHeaderDescription WavFileReader::goToNextChunk(FILE *fd, bool fromCurrentPo
         if (readFromFileWithCheck(fd, (uint8_t*)&(out.header), sizeof(ChunkHeader)) ){
             out.pos = ftell(fd);
             if (out.pos == -1){
-                cerr << "Error on ftell in goToNextChunk"<<endl;
+                SIMPLE_LOGGER.addErrorLine("Error on ftell in goToNextChunk.\n");
                 out.header.size = 0;
                 return out;
             }
@@ -246,7 +261,8 @@ ChunkHeaderDescription WavFileReader::goToNextChunk(FILE *fd, bool fromCurrentPo
 uint32_t WavFileReader::getFileTailSize_bytes(FILE *fd) {
     int32_t filePos = ftell(m_wavFileDescr.fd);
     if (filePos < 0){
-        cerr << "Error on get file tail size." << endl;
+        SIMPLE_LOGGER.addErrorLine("Error on get file tail size.\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
         return 0;
     }
     int32_t tailSize = m_wavFileDescr.totalFileSize - filePos;
@@ -255,7 +271,8 @@ uint32_t WavFileReader::getFileTailSize_bytes(FILE *fd) {
 
 bool WavFileReader::readFromFileWithCheck(FILE *fd, uint8_t *buffer, uint32_t dataSize) {
     if (!hasFileEnoughDataForRead(dataSize, fd) ){
-        cerr << "Error on reading data from file - is too small." << endl;
+        SIMPLE_LOGGER.addErrorLine("Error on reading data from file " + m_wavFileDescr.fileName + " : too short.\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
         return false;
     }
     size_t status = fread(buffer, sizeof(uint8_t), dataSize, fd);
@@ -264,7 +281,8 @@ bool WavFileReader::readFromFileWithCheck(FILE *fd, uint8_t *buffer, uint32_t da
         return false;
     }
     if (status != dataSize){
-        cerr << "Error on reading file (read return " << status << " expected = " << dataSize << ")" << endl;
+        m_status = WAVEFILEREADER_STATUS_FAIL;
+        SIMPLE_LOGGER.addErrorLine("Error on reading file (read return " + toStr(status) + " expected: " + toStr(dataSize) + ")\n");
         return false;
     }
     return true;
@@ -273,7 +291,8 @@ bool WavFileReader::readFromFileWithCheck(FILE *fd, uint8_t *buffer, uint32_t da
 bool WavFileReader::seekInFileWithCheck(FILE *fd, uint32_t seekSize, int __whence) {
     int status = fseek(fd, seekSize, __whence);
     if (status != 0){
-        cerr << "Error on seeking file. status = " << status << endl;
+        SIMPLE_LOGGER.addErrorLine("Error on seeking file. status: " + toStr(status) + "\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
         return false;
     }
     return true;

@@ -2,6 +2,7 @@
 
 #include "FilesListMaker.h"
 #include "WAVFilesConverter.h"
+#include "SimpleLogger.h"
 
 #include <ctime>
 
@@ -13,15 +14,17 @@ int main(int argc, char** argv) {
         filesList = FilesListMaker::makeFilesList(argv[1]);
     }
     else{
-        cerr << "No directory set. You should run the program with first parameter contains directory with files for encoding: wav2mp3 ./directory/directory" << endl;
+        SIMPLE_LOGGER.showError("No directory set. You should run the program with first parameter contains directory with files for encoding: wav2mp3 ./directory/directory\n");
         return 0;
     }
-    cout << "Got files list size = " << filesList.size() << endl;
-
+    SIMPLE_LOGGER.show("Files in the given folder: " + toStr(filesList.size()) + "\n");
     WAVFilesConverter* flsConv = WAVFilesConverter::instance();
     flsConv->startEncoding(&filesList);
     flsConv->wait();
-    cout << "Finish encoding files" << endl;
+    SIMPLE_LOGGER.show("Finish encoding files.\n");
+    delete flsConv;
+    SIMPLE_LOGGER.stop();
+//    sleep(100);
 
 //    time_t start, stop;
 //    time(&start);  /* get current time; same as: timer = time(NULL)  */
@@ -29,6 +32,5 @@ int main(int argc, char** argv) {
 //    time(&stop);
 //    double seconds = difftime(stop, start);
 //    cout << "took = " << seconds << " s" << endl;
-
     return 0;
 }
