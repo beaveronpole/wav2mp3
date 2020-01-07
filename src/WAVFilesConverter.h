@@ -55,6 +55,9 @@ private:
     //returns an optimal number of threads
     static int getNumCPU();
 
+    // sort file by size (large first) to increase total encoding speed
+    list<string>* sortFilesBySize(list<string>*);
+
     //singleton instance of class
     static WAVFilesConverter* m_instance;
 
