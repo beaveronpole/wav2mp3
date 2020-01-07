@@ -14,7 +14,11 @@ list<string> * FilesListMaker::makeFilesList(const string& directory) {
                 continue;
             }
             char resolved[PATH_MAX];
-            realpath(directory.c_str(), resolved);
+            char* status = realpath(directory.c_str(), resolved);
+            if (status == NULL){
+                SIMPLE_LOGGER.showError("Some error in reading file path for " + toStr(directory.c_str()) +" Continue...\n");
+                continue;
+            }
             string gotFilePath(string(resolved) + PATH_SEPARATOR + string(ent->d_name));
             outList->push_back(gotFilePath);
         }
