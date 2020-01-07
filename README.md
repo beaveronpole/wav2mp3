@@ -125,7 +125,7 @@ It will encode test files, which are in the test folder.
 
 # How it Works?
 
-Something like flow diagram is on the picture:
+Something like sequence diagram is on the picture:
 ![diagram](images/main_diagram.png)
 original diagram is here [diagram](images/main_diagram.drawio) 
 
