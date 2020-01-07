@@ -12,6 +12,7 @@ SimpleLogger::SimpleLogger():
     int status_mutex = pthread_mutex_init(&m_mapsMutex, NULL);
     if (status_mutex != 0){
         cerr << "error on init mutex SimpleLogger." << endl;
+        return;
     }else{
         available = true;
     }
@@ -30,12 +31,14 @@ SimpleLogger *SimpleLogger::instance() {
 void SimpleLogger::show(const string &str) {
     pthread_mutex_lock(&m_mapsMutex);
     cout << str;
+    fflush(stdout);
     pthread_mutex_unlock(&m_mapsMutex);
 }
 
 void SimpleLogger::showError(const string &str) {
     pthread_mutex_lock(&m_mapsMutex);
     cerr << str;
+    fflush(stderr);
     pthread_mutex_unlock(&m_mapsMutex);
 }
 
@@ -70,6 +73,8 @@ SimpleLogger* SimpleLogger::addErrorLine(const string &str) {
 void SimpleLogger::flush() {
     pthread_t tid = pthread_self();
     pthread_mutex_lock(&m_mapsMutex);
+    fflush(stdout);
+    fflush(stderr);
 
     map<pthread_t, string>::iterator itr = m_threadStrings.find(tid);
     if (itr != m_threadStrings.end()){
