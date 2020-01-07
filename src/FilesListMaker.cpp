@@ -4,9 +4,9 @@
 
 #include "FilesListMaker.h"
 
-list<string> FilesListMaker::makeFilesList(const string& directory) {
+list<string> * FilesListMaker::makeFilesList(const string& directory) {
     DIR *dir;
-    list<string> outList;
+    list<string>* outList = new list<string>;
     struct dirent *ent;
     if ((dir = opendir (directory.c_str())) != NULL) {
         while ((ent = readdir (dir)) != NULL) {
@@ -16,7 +16,7 @@ list<string> FilesListMaker::makeFilesList(const string& directory) {
             char resolved[PATH_MAX];
             realpath(directory.c_str(), resolved);
             string gotFilePath(string(resolved) + PATH_SEPARATOR + string(ent->d_name));
-            outList.push_back(gotFilePath);
+            outList->push_back(gotFilePath);
         }
         closedir (dir);
     } else {

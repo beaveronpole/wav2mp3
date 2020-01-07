@@ -146,6 +146,10 @@ list<string>* WAVFilesConverter::sortFilesBySize(list<string> *files) {
     return out;
 }
 
+void WAVFilesConverter::kill() {
+    delete m_instance;
+}
+
 WAVFilesConverter::~WAVFilesConverter() {
     stopAllWorkers();
     wait();

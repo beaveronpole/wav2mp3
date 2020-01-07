@@ -22,7 +22,7 @@ using namespace std;
 
 class FilesListMaker {
 public:
-    static list<string> makeFilesList(const string& directory);
+    static list<string> * makeFilesList(const string& directory);
 };
 
 

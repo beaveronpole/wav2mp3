@@ -101,6 +101,7 @@ void WAVFileConverter::cleanBuffer() {
 WAVFileConverter::~WAVFileConverter() {
     delete m_reader;
     delete m_encoder;
+    cleanBuffer();
     delete m_readerBuf->at(0);
     delete m_readerBuf->at(1);
     delete m_readerBuf;

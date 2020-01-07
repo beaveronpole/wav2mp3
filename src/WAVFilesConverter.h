@@ -40,6 +40,8 @@ public:
     //wait until all workers finished. And delete finished workers
     void wait();
 
+    static void kill();
+
     virtual ~WAVFilesConverter();
 
 private:
