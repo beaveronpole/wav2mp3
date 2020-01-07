@@ -201,11 +201,9 @@ private:
     uint32_t getFileTailSize_bytes(FILE* fd);
 
     // helps to read different data types from file with checking available data size in file
-    //TODO everywhere put this FUNCTION
     bool readFromFileWithCheck(FILE* fd, uint8_t* buffer, uint32_t dataSize);
 
     // helps to seek in a file with checking seek status
-    // TODO maybe it is garbage?
     bool seekInFileWithCheck(FILE* fd, uint32_t seekSize, int __whence=SEEK_CUR);
 
     WAVFileDescriptor m_wavFileDescr;
