@@ -28,6 +28,8 @@ public:
 
     inline uint32_t uid() {return m_uid;}
 
+    void wait();
+
     virtual ~ConverterWorker();
 
 private:

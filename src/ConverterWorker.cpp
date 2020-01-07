@@ -75,9 +75,13 @@ void ConverterWorker::stop() {
     pthread_cond_signal(&m_startConvertingCondition);
 }
 
+void ConverterWorker::wait() {
+    pthread_join(m_workerThread, NULL);
+}
+
+
 ConverterWorker::~ConverterWorker() {
-    //TODO check returns
-    //TODO check is lock
+    // pthread_condition is not waiting, mutex is unlocked, thread is finished
     pthread_mutex_destroy(&m_startConvertingMutex);
     pthread_cond_destroy(&m_startConvertingCondition);
     delete m_converter;
