@@ -29,17 +29,16 @@ bool WAVFilesConverter::init(uint32_t threadCount) {
 }
 
 void WAVFilesConverter::startEncoding(list<string>* files) {
+    if (files->empty()){
+        SIMPLE_LOGGER.showError("No files in list.\n");
+        return;
+    }
     m_files = sortFilesBySize(files);
     //create worker count as minimum(files count (any in list, we know nothing about them here) <-> optimal thread count)
     int maxThreads = min((uint32_t)m_files->size(), getNumCPU());
     if (!init(maxThreads)) //init here, for restart encoding. If Init in constructor- we have to reinit manually
     {
         SIMPLE_LOGGER.showError("error in converter initialization.\n");
-        return;
-    }
-    if (m_files->empty()){
-        SIMPLE_LOGGER.showError("No files in list.\n");
-        stopAllWorkers();
         return;
     }
     m_currentFileName = m_files->begin();
