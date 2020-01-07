@@ -49,7 +49,7 @@ The project build system is CMake.
 
 *I used a profiler, but the most time is taken by Lame-> so it is unreasonable*
 
-In project release section there are built binaries of project for Windows and Linux, but it may not work on every system, and should be rebuild.
+In project release section there are built binaries of project for Windows and Linux, but it may not work on every system, and should be rebuild for concrete system.
 
 #### Build on Windows:
 
