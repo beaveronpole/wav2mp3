@@ -82,7 +82,6 @@ void WAVFileConverter::processFile(const string &fileName) {
     m_encoder->finishEncoding();
     string status = m_reader->status() == WavFileReader::WAVEFILEREADER_STATUS_OK ? "OK! " : "FAIL ";
     if (m_reader->status() != WavFileReader::WAVEFILEREADER_STATUS_OK){
-        //TODO delete the file
         remove(outMP3FileName.c_str());
     }
     SIMPLE_LOGGER.addLine(status + " \t" + fileName + "\n");
