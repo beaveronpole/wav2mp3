@@ -12,9 +12,9 @@ This is a project for the task:
 
 * [**Build on Windows**](#build-on-windows)
 
-* [**Build on Linux (Debian like)**](#build-on-linux-(debian-like))
+* [**Build on Linux (Debian like)**](#build-on-linux-debian-like)
 
-* [**How it Works?**](#how-it-works?)
+* [**How it Works?**](#how-it-works)
 
 # Description
 The project contains WAV file parser for data types:
