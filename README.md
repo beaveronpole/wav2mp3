@@ -13,26 +13,23 @@ The project contains WAV file parser for data types:
 
 *It should work for unsigned 2..7 bit data, and signed 9..31 data, but i have no files to check.*
 
+Converter works for files with format: `RIFF('WAVE' <fmt(PCM|FLOAT)>,<wave-data>)`
+
 To start encoding we should run the program with args like: `wav2mp3 ./directory_with_wav_files`
 
 # Result
-Now the application can read WAV files and convert them to MP3 files using Lame library 3.100 with multitthreads. The thread count is an optimal thread count for your system (*threads count == CPU core threads count*).
+Now the application can read WAV files and convert them to MP3 files using Lame library 3.100 with multithreads. The thread count is an optimal thread count for your system (*threads count == CPU core threads count*) OR if files count is less then cores count-> files count.
 It works in Linux and Windows with Cygwin for posix threads. 
 
 The project build system is CMake.
 
 *Tested on Debian 10, Windows 10.*
 
-# Plan
-
-1. Add simple logger for multithread environment
-2. Think about ID3 tags
-
 #### Build on Windows:
 
 To build the project on Windows we should install Cygwin from here https://www.cygwin.com/
-It allows us to use posix threads under the Windows system. While installing cygwin in GUI we should enable several additional packages:
-`cmake`, `gcc-g++`, `gdb`, `make`
+It allows us to use posix threads under the Windows system. While installing cygwin 3.1.2 in GUI we should enable several additional packages:
+`cmake 3.15.5-1`, `gcc-g++ 7.4.0-1`, `gdb 8.1.1-1`, `make 4.2.1-2`
 
 ***To build lame using cygwin:***
 1. start cygwin terminal
@@ -50,7 +47,7 @@ Our library `libmp3lame.a` is in here `OUR_SETTED_PATH/lib`.
 3. run `make` to build the project
 
 ***To run the application:***
-1. n the cygwin terminal go to the `wav2mp3/build` folder
+1. In the cygwin terminal go to the `wav2mp3/build` folder
 2. and run `./wav2mp3 ./`
 It will encode test files, which are in that folder.
 
@@ -76,7 +73,11 @@ so we have to put last three libraries to our build folder. Libraries are in the
 * run it with a directory containing *.wav files.
 
 
- 
+# How it Works?
+
+Simple something like flow diagram is on the picture:
+![diagram](images/main_diagram.png)
+original diagram is here [diagram](images/main_diagram.drawio) 
 
 #### Notes
 
