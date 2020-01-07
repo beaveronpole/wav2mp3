@@ -2,6 +2,20 @@
 This is a project for the task: 
 - convert WAV files to MP3 files in multithread manner in OS Linux and Windows.
 
+#
+
+* [**Brief**](#brief)
+
+* [**Description**](#description)
+
+* [**Result**](#result)
+
+* [**Build on Windows**](#build-on-windows)
+
+* [**Build on Linux (Debian like)**](#build-on-linux-(debian-like))
+
+* [**How it Works?**](#how-it-works?)
+
 # Description
 The project contains WAV file parser for data types:
 - unsinged integer 8 bit
@@ -17,13 +31,25 @@ Converter works for files with format: `RIFF('WAVE' <fmt(PCM|FLOAT)>,<wave-data>
 
 To start encoding we should run the program with args like: `wav2mp3 ./directory_with_wav_files`
 
+Program uses pure C++98 standard, so there is no any smartpointers, auto, functional bindings, lambdas and many other useful things. Why? The same reason as it uses POSIX threads instead of C++11.
+
+Error handling uses return values here to keep "warm lamp" aura of code. It could use exceptions, but it didnt.
+
+I hope I have made not bad object project object structure. 
+
 # Result
 Now the application can read WAV files and convert them to MP3 files using Lame library 3.100 with multithreads. The thread count is an optimal thread count for your system (*threads count == CPU core threads count*) OR if files count is less then cores count-> files count.
 It works in Linux and Windows with Cygwin for posix threads. 
 
 The project build system is CMake.
 
-*Tested on Debian 10, Windows 10.*
+*Build tested on Debian 10, Ubuntu 16.04, Windows 10.*
+
+*App tested with Valgrind -> no memory leaks found*
+
+*I used a profiler, but the most time is taken by Lame-> so it is unreasonable*
+
+In project release section there are built binaries of project for Windows and Linux, but it may not work on every system, and should be rebuild.
 
 #### Build on Windows:
 
@@ -35,7 +61,7 @@ It allows us to use posix threads under the Windows system. While installing cyg
 1. start cygwin terminal
 2. choose a place where you want to install binaries `OUR_SETTED_PATH` (ex. `OUR_SETTED_PATH="e:/build_lame"`)
 3. go to the lame folder
-4. in a lame sources folder start  `configure --prefix=OUR_SETTED_PATH` script to produce make file
+4. in the lame sources folder start  `configure --prefix=OUR_SETTED_PATH` script to produce make file
 5. then run `make` command here
 6. and run `make install` to put files to OUR_SETTED_PATH
 
@@ -48,8 +74,8 @@ Our library `libmp3lame.a` is in here `OUR_SETTED_PATH/lib`.
 
 ***To run the application:***
 1. In the cygwin terminal go to the `wav2mp3/build` folder
-2. and run `./wav2mp3 ./`
-It will encode test files, which are in that folder.
+2. and run `./wav2mp3 ./testfiles`
+It will encode test files, which are in the test folder.
 
 If we want to run the project from different places- we should to do one of two things:
 
@@ -71,6 +97,30 @@ so we have to put last three libraries to our build folder. Libraries are in the
 * run  `PATH=PATH;your_cygwin_folder\bin` (your_cygwin_folder is your cygwin folder)
 * go to the `wav2mp3.exe` binary
 * run it with a directory containing *.wav files.
+
+#### Build on Linux (Debian like):
+
+We should install `build-essential` and `cmake`.
+
+***To build lame:***
+1. go to the lame folder
+2. choose a place where you want to install binaries `OUR_SETTED_PATH` (ex. `OUR_SETTED_PATH="/home/user/tmp/build_lame"`)
+3. in the lame sources folder start  `configure --prefix=OUR_SETTED_PATH --with-pic` script to produce make file
+4. then run `make` command here
+5. and run `make install` to put files to OUR_SETTED_PATH
+
+Our library `libmp3lame.a` is in here `OUR_SETTED_PATH/lib`.
+
+***To build a project:***
+1. In the terminal go to the `src` folder of the project `wav2mp3` (`./wav2mp3/src`)
+2. run `cmake CMakeLists.txt` to generate MakeFile
+3. run `make` to build the project
+
+***To run the application:***
+1. In the terminal go to the `wav2mp3/build` folder
+2. and run `./wav2mp3 ./testfiles`
+It will encode test files, which are in the test folder.
+
 
 
 # How it Works?
