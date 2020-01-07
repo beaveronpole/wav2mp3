@@ -6,7 +6,9 @@
 
 BaseWaveDataReader::BaseWaveDataReader():
         m_fd(NULL),
-        m_channelsCount(0)
+        m_channelsCount(0),
+        m_bitsPerSample(0),
+        m_bytesPerSample(0)
 {
 }
 

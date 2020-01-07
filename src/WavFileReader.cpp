@@ -9,7 +9,8 @@ using namespace std;
 
 WavFileReader::WavFileReader(const string &fileName):
         m_datareader(NULL),
-        m_status(WAVEFILEREADER_STATUS_OK){
+        m_status(WAVEFILEREADER_STATUS_OK),
+        m_readDataSizeOfCurrentChunk_bytes(0){
     m_wavFileDescr.fileName = fileName;
     parseWAVFileHead(fileName);
 
@@ -81,22 +82,22 @@ bool WavFileReader::openWavFile(const string &fileName) {
     return true;
 }
 
-uint32_t WavFileReader::getFileSize(FILE *fd) {
+uint64_t WavFileReader::getFileSize(FILE *fd) {
     if (fd == NULL){
         SIMPLE_LOGGER.addErrorLine("Error. File descriptor is not open.\n");
         return 0;
     }
-    int32_t cur_pos = ftell(fd); //save the position on enter
+    int64_t cur_pos = ftell(fd); //save the position on enter
     if (cur_pos < 0){
         SIMPLE_LOGGER.addErrorLine("Error on reading file.\n");
         return 0;
     }
-    int32_t status = fseek(fd, 0, SEEK_END);
+    int64_t status = fseek(fd, 0, SEEK_END);
     if (status != 0){
         SIMPLE_LOGGER.addErrorLine("Error on reading file.\n");
         return 0;
     }
-    int32_t fileSize = ftell(fd);
+    int64_t fileSize = ftell(fd);
     if (fileSize < 0){
         SIMPLE_LOGGER.addErrorLine("Error on reading file.\n");
         return 0;
@@ -106,7 +107,7 @@ uint32_t WavFileReader::getFileSize(FILE *fd) {
         SIMPLE_LOGGER.addErrorLine("Error on reading file.\n");
         return 0;
     }
-    return fileSize;
+    return (uint32_t)fileSize;
 }
 
 bool WavFileReader::isWAVEFile() {
@@ -253,15 +254,17 @@ ChunkHeaderDescription WavFileReader::goToNextChunk(FILE *fd, bool fromCurrentPo
     return out;
 }
 
-uint32_t WavFileReader::getFileTailSize_bytes(FILE *fd) {
-    int32_t filePos = ftell(m_wavFileDescr.fd);
+uint64_t WavFileReader::getFileTailSize_bytes(FILE *fd) {
+    int64_t filePos = ftell(fd);
     if (filePos < 0){
         SIMPLE_LOGGER.addErrorLine("Error on get file tail size.\n");
         m_status = WAVEFILEREADER_STATUS_FAIL;
         return 0;
     }
-    int32_t tailSize = m_wavFileDescr.totalFileSize - filePos;
-    return tailSize;
+    int64_t tailSize = m_wavFileDescr.totalFileSize - filePos;
+    if (tailSize > 0)
+        return (uint32_t)tailSize;
+    return 0;
 }
 
 bool WavFileReader::readFromFileWithCheck(FILE *fd, uint8_t *buffer, uint32_t dataSize) {

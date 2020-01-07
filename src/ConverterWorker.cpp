@@ -7,7 +7,8 @@
 uint32_t ConverterWorker::ConverterWorkerUID = 0;
 
 ConverterWorker::ConverterWorker(void (*finishCallBack)(uint32_t)):
-        m_canWork(false){
+        m_canWork(false),
+        m_threadActive(false){
     m_finishCallBack = finishCallBack;
     m_uid = ConverterWorkerUID++;
     m_converter = new WAVFileConverter(4096);

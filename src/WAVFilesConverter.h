@@ -53,9 +53,9 @@ private:
     void stopAllWorkers();
 
     //returns an optimal number of threads
-    static int getNumCPU();
+    static uint32_t getNumCPU();
 
-    // sort file by size (large first) to increase total encoding speed
+    // sort file by size (large first) to increase total encoding speed (especially with small amount of cores)
     list<string>* sortFilesBySize(list<string>*);
 
     //singleton instance of class

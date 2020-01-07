@@ -2,7 +2,6 @@
 
 #include "FilesListMaker.h"
 #include "WAVFilesConverter.h"
-#include "SimpleLogger.h"
 
 #include <sys/time.h>
 
@@ -20,15 +19,15 @@ int main(int argc, char** argv) {
     SIMPLE_LOGGER.show("Files in the folder: " + toStr(filesList.size()) + "\n");
 
 
-    struct timeval tp;
-    uint32_t start, stop;
+    timeval tp;
+    uint64_t start, stop;
     gettimeofday(&tp, NULL);
     start = tp.tv_sec * 1000 + tp.tv_usec / 1000;
 
     WAVFilesConverter* flsConv = WAVFilesConverter::instance();
     flsConv->startEncoding(&filesList);
     flsConv->wait();
-    SIMPLE_LOGGER.show("Finish encoding files.\n");
+    SIMPLE_LOGGER.show("\nFinished encoding files.\n");
     delete flsConv;
     SIMPLE_LOGGER.stop();
 

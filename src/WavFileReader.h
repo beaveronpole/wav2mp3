@@ -180,7 +180,7 @@ private:
     bool openWavFile(const string &fileName);
 
     // function returns total file size of given file descriptor
-    uint32_t getFileSize(FILE* fd);
+    uint64_t getFileSize(FILE* fd);
 
     // checks if file has WAVE data
     bool isWAVEFile();
@@ -198,7 +198,7 @@ private:
     bool hasFileEnoughDataForRead(size_t dataSize, FILE* fd);
 
     //return remain file size from a current position
-    uint32_t getFileTailSize_bytes(FILE* fd);
+    uint64_t getFileTailSize_bytes(FILE* fd);
 
     // helps to read different data types from file with checking available data size in file
     bool readFromFileWithCheck(FILE* fd, uint8_t* buffer, uint32_t dataSize);
