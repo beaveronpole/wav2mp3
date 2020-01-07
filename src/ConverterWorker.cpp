@@ -49,10 +49,12 @@ void* ConverterWorker::workerFunction(void* args) {
     //LOOP
     while(object->m_threadActive){
         //wait for a new file
+        pthread_mutex_lock(&(object->m_startConvertingMutex));
         while (object->m_processFileName.empty() && object->m_threadActive) {
             pthread_cond_wait(&(object->m_startConvertingCondition), &(object->m_startConvertingMutex));
         }
         if (!object->m_threadActive){
+            pthread_mutex_unlock(&(object->m_startConvertingMutex));
             break;
         }
         //process
@@ -60,6 +62,7 @@ void* ConverterWorker::workerFunction(void* args) {
         object->m_converter->processFile(currentFileName);
         object->m_processFileName = "";
         object->m_finishCallBack(object->m_uid);
+        pthread_mutex_unlock(&(object->m_startConvertingMutex));
     }
     // if we want to know when worker finished its life
 //    SIMPLE_LOGGER.show("*** Worker retired UID: " + toStr(object->m_uid) + "\n");
