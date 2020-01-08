@@ -132,6 +132,10 @@ original diagram is here [diagram](images/main_diagram.drawio)
 #### Notes
 
 ./configure --prefix=.../wav2mp3/lame-3.100/build --with-pic
+./configure --prefix=/e/lame_build_mingw/ --disable-shared --disable-decoder --disable-frontend --enable-static --with-pic 
+--host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32
+msys for mingw64
+https://sourceforge.net/p/mingw-w64/wiki2/MSYS/
 
 patches:
 

@@ -14,12 +14,18 @@ list<string> * FilesListMaker::makeFilesList(const string& directory) {
                 continue;
             }
             char resolved[PATH_MAX];
+
+#ifdef __MINGW64__
+            char* status = _fullpath(resolved, directory.c_str(), PATH_MAX);
+#else
             char* status = realpath(directory.c_str(), resolved);
+#endif
+            string gotFilePath(string(resolved) + PATH_SEPARATOR + string(ent->d_name));
             if (status == NULL){
                 SIMPLE_LOGGER.showError("Some error in reading file path for " + toStr(directory.c_str()) +" Continue...\n");
                 continue;
             }
-            string gotFilePath(string(resolved) + PATH_SEPARATOR + string(ent->d_name));
+
             outList->push_back(gotFilePath);
         }
         closedir (dir);
@@ -28,4 +34,14 @@ list<string> * FilesListMaker::makeFilesList(const string& directory) {
         SIMPLE_LOGGER.showError("Error in opening directory : " + directory + "\n");
     }
     return outList;
+}
+
+string FilesListMaker::getFullFileName(string dirName, string fileName) {
+    return dirName+fileName;
+}
+
+void FilesListMaker::printFilesList(list<string>* files) {
+    for (list<string>::iterator itr = files->begin(); itr != files->end(); itr++){
+        cout << *itr << endl;
+    }
 }

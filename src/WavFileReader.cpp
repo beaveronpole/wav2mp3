@@ -58,7 +58,7 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
         return;
     }
 
-    chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, false, "data");
+    chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, true, "data");
     m_currentChunkHeaderDescription = chunkHeaderTmp;
     // check if file size more than size in chunk
     if (chunkHeaderTmp.header.size == 0){ // no data

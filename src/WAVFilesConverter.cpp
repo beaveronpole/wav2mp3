@@ -36,6 +36,8 @@ void WAVFilesConverter::startEncoding(list<string>* files) {
     m_files = sortFilesBySize(files);
     //create worker count as minimum(files count (any in list, we know nothing about them here) <-> optimal thread count)
     int maxThreads = min((uint32_t)m_files->size(), getNumCPU());
+    //TODO remove
+    maxThreads = 1;
     if (!init(maxThreads)) //init here, for restart encoding. If Init in constructor- we have to reinit manually
     {
         SIMPLE_LOGGER.showError("error in converter initialization.\n");
@@ -105,8 +107,13 @@ void WAVFilesConverter::wait() {
 }
 
 uint32_t WAVFilesConverter::getNumCPU() {
+#ifdef __MINGW64__
+    //TODO make get CPU count for windows
+    long int numCPU = pthread_num_processors_np();
+#else
     //for linux
     long int numCPU = sysconf(_SC_NPROCESSORS_ONLN);
+#endif
     if (numCPU <= 0) {
         SIMPLE_LOGGER.show("Unable to get optimal thread count. Work with 1 thread.\n");
         return 1;

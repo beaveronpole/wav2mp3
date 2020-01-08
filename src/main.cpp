@@ -11,6 +11,7 @@ int main(int argc, char** argv) {
     list<string>* filesList;
     if (argc > 1) {
         filesList = FilesListMaker::makeFilesList(argv[1]);
+//        FilesListMaker::printFilesList(filesList);
     }
     else{
         SIMPLE_LOGGER.showError("No directory set. You should run the program with first parameter contains directory with files for encoding: wav2mp3 ./directory/directory\n");

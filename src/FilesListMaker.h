@@ -12,6 +12,10 @@
 #include <iostream>
 #include <cstdlib>
 
+#ifdef __MINGW64__
+//    #include <windows.h>
+#endif
+
 #include "SimpleLogger.h"
 
 /*
@@ -23,6 +27,8 @@ using namespace std;
 class FilesListMaker {
 public:
     static list<string> * makeFilesList(const string& directory);
+    static string getFullFileName(string dirName, string fileName);
+    static void printFilesList(list<string>* files);
 };
 
 

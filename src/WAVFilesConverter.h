@@ -11,7 +11,11 @@
 #include <string>
 #include <map>
 
-#include <unistd.h>
+#ifdef __MINGW64__
+//    #include <windows.h>
+#else
+    #include <unistd.h>
+#endif
 
 #include "WAVFileConverter.h"
 #include "ConverterWorker.h"

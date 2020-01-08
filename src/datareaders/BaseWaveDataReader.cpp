@@ -34,7 +34,13 @@ uint32_t BaseWaveDataReader::getData(vector<vector<int32_t>* >* buf, uint32_t si
     uint32_t sizeForReading_bytes = size_samples * m_channelsCount * m_bytesPerSample;
     m_rawBuffer.reserve(sizeForReading_bytes);
     //read from file available data
-    size_t status = fread(m_rawBuffer.data(), sizeForReading_bytes, 1, m_fd);
+
+    //TODO it was
+//    size_t status = fread(m_rawBuffer.data(), sizeForReading_bytes, 1, m_fd);
+
+    //TODO read in LOOP like in stream!
+    size_t status = fread(m_rawBuffer.data(), 1,sizeForReading_bytes, m_fd);
+
     if (status != 1) {
         SIMPLE_LOGGER.addErrorLine("Error on reading data from file.\n");
         return 0;
