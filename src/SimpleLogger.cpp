@@ -35,9 +35,12 @@ void SimpleLogger::show(const string &str) {
     pthread_mutex_unlock(&m_mapsMutex);
 }
 
-void SimpleLogger::showError(const string &str) {
+void SimpleLogger::showError(const string &str, int error) {
     pthread_mutex_lock(&m_mapsMutex);
     cerr << str;
+    if (error){
+        cerr << strerror(error) << endl;
+    }
     fflush(stderr);
     pthread_mutex_unlock(&m_mapsMutex);
 }
@@ -56,15 +59,17 @@ SimpleLogger* SimpleLogger::addLine(const string &str) {
     return this;
 }
 
-SimpleLogger* SimpleLogger::addErrorLine(const string &str) {
+SimpleLogger* SimpleLogger::addErrorLine(const string &str, int error) {
     pthread_t tid = pthread_self();
     pthread_mutex_lock(&m_mapsMutex);
     map<pthread_t, string>::iterator itr = m_threadErrorStrings.find(tid);
     if (itr == m_threadErrorStrings.end()){
         m_threadErrorStrings[tid] = "\t"+str;
+        if (error) m_threadErrorStrings[tid] += strerror(error);
     }
     else{
         (*itr).second += "\t"+str;
+        if (error) (*itr).second += strerror(error);
     }
     pthread_mutex_unlock(&m_mapsMutex);
     return this;

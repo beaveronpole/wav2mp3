@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <cstdio>
+#include <cstring>
 #include "unistd.h"
 
 using namespace std;
@@ -44,13 +45,13 @@ public:
     void show(const string &);
 
     // show string immediately to error stream
-    void showError(const string &);
+    void showError(const string &str, int error = 0);
 
     // add line of thread
     SimpleLogger* addLine(const string &);
 
-    // add line of thread to error stream
-    SimpleLogger* addErrorLine(const string &);
+    // add line of thread to error stream, if error != 0 -> get and print errno (strerror)
+    SimpleLogger* addErrorLine(const string &str, int error = 0);
 
     // flush thread data
     void flush();
