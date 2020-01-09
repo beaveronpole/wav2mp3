@@ -21,7 +21,6 @@ using namespace std;
 
 class FileHelper {
 public:
-    //TODO clearerr ?
     enum FileHelperStatus {
         FILEHELPERSTATUS_OK = 0,
         FILEHELPERSTATUS_PARTIAL = 1,

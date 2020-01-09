@@ -8,7 +8,6 @@ WAVFilesConverter* WAVFilesConverter::m_instance = NULL;
 
 WAVFilesConverter::WAVFilesConverter():
 m_files(NULL){
-    //we can sort files by size here to optimize encoding sequence -> first goes largest files
 }
 
 bool WAVFilesConverter::init(uint32_t threadCount) {
