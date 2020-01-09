@@ -8,12 +8,13 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ../../build)
 set(MAIN_PROJECT_DIR ..)
 
 add_executable(wav2mp3 main.cpp lame/lame.h
-        WavFileReader.h WavFileReader.cpp datareaders/BaseWaveDataReader.cpp datareaders/BaseWaveDataReader.h datareaders/SignedIntWaveDataReader.cpp datareaders/SignedIntWaveDataReader.h datareaders/UnsignedIntWaveDataReader.cpp datareaders/UnsignedIntWaveDataReader.h datareaders/FloatWaveDataReader.cpp datareaders/FloatWaveDataReader.h datareaders/DoubleWaveDataReader.cpp datareaders/DoubleWaveDataReader.h datareaders/WaveDataReaderCreator.cpp datareaders/WaveDataReaderCreator.h datareaders/datareaders.h SignalDataEncoder.cpp SignalDataEncoder.h WAVFileConverter.cpp WAVFileConverter.h FilesListMaker.cpp FilesListMaker.h WAVFilesConverter.cpp WAVFilesConverter.h ConverterWorker.cpp ConverterWorker.h SimpleLogger.cpp SimpleLogger.h)
+        WavFileReader.h WavFileReader.cpp datareaders/BaseWaveDataReader.cpp datareaders/BaseWaveDataReader.h datareaders/SignedIntWaveDataReader.cpp datareaders/SignedIntWaveDataReader.h datareaders/UnsignedIntWaveDataReader.cpp datareaders/UnsignedIntWaveDataReader.h datareaders/FloatWaveDataReader.cpp datareaders/FloatWaveDataReader.h datareaders/DoubleWaveDataReader.cpp datareaders/DoubleWaveDataReader.h datareaders/WaveDataReaderCreator.cpp datareaders/WaveDataReaderCreator.h datareaders/datareaders.h SignalDataEncoder.cpp SignalDataEncoder.h WAVFileConverter.cpp WAVFileConverter.h FilesListMaker.cpp FilesListMaker.h WAVFilesConverter.cpp WAVFilesConverter.h ConverterWorker.cpp ConverterWorker.h SimpleLogger.cpp SimpleLogger.h FileHelper.cpp FileHelper.h)
 
 if (CYGWIN)
     message ("CygWIN")
     add_compile_definitions(PATH_SEPARATOR='/')
     target_link_libraries(wav2mp3 ${CMAKE_SOURCE_DIR}/../lib/cygwin/libmp3lame.a pthread)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 endif(CYGWIN)
 
 if (MINGW)
@@ -21,6 +22,7 @@ if (MINGW)
     add_compile_definitions(PATH_SEPARATOR='/')
     target_link_libraries(wav2mp3 ${CMAKE_SOURCE_DIR}/../lib/mingw64/libmp3lame.a pthread)
     add_definitions(-D__STDC_LIMIT_MACROS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 endif(MINGW)
 
 if (UNIX)
