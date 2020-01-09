@@ -146,10 +146,6 @@ list<string>* WAVFilesConverter::sortFilesBySize(list<string> *files) {
         out->push_back(itr->second);
     }
 
-    for (list<string>::iterator itr = out->begin(); itr != out->end(); itr++){
-        cout << *itr << endl;
-    }
-
     return out;
 }
 
