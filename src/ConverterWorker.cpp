@@ -20,19 +20,19 @@ bool ConverterWorker::initPthread() {
 
     int status_mutex = pthread_mutex_init(&m_startConvertingMutex, NULL);
     if (status_mutex != 0){
-        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex).\n");
+        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex).\n", 0);
         return false;
     }
     int status_cond = pthread_cond_init(&m_startConvertingCondition, NULL);
     if (status_cond != 0){
-        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (condition).\n");
+        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (condition).\n", 0);
         return false;
     }
 
     int err = pthread_create(&m_workerThread, NULL,
                              &ConverterWorker::workerFunction, this);
     if (err != 0){
-        SIMPLE_LOGGER.showError("error on creation worker thread.\n");
+        SIMPLE_LOGGER.showError("error on creation worker thread.\n", 0);
         return false;
     }
     return true;

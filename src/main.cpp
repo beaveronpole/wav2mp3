@@ -14,7 +14,9 @@ int main(int argc, char** argv) {
 //        FilesListMaker::printFilesList(filesList);
     }
     else{
-        SIMPLE_LOGGER.showError("No directory set. You should run the program with first parameter contains directory with files for encoding: wav2mp3 ./directory/directory\n");
+        SIMPLE_LOGGER.showError(
+                "No directory set. You should run the program with first parameter contains directory with files for encoding: wav2mp3 ./directory/directory\n",
+                0);
         return 0;
     }
     SIMPLE_LOGGER.show("Files in the folder: " + toStr(filesList->size()) + "\n");

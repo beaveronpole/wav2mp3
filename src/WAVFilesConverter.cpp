@@ -15,7 +15,7 @@ bool WAVFilesConverter::init(uint32_t threadCount) {
     ConverterWorker* newWorker = NULL;
     int status_mutex = pthread_mutex_init(&m_mutexCurrentFileNameIterator, NULL);
     if (status_mutex != 0){
-        SIMPLE_LOGGER.showError("error on init mutex CurrentFileNameIterator in WAVFilesConverter.\n");
+        SIMPLE_LOGGER.showError("error on init mutex CurrentFileNameIterator in WAVFilesConverter.\n", 0);
         return false;
     }
     for (uint32_t i = 0; i < threadCount; i++){
@@ -30,17 +30,15 @@ bool WAVFilesConverter::init(uint32_t threadCount) {
 
 void WAVFilesConverter::startEncoding(list<string>* files) {
     if (files->empty()){
-        SIMPLE_LOGGER.showError("No files in list.\n");
+        SIMPLE_LOGGER.showError("No files in list.\n", 0);
         return;
     }
     m_files = sortFilesBySize(files);
     //create worker count as minimum(files count (any in list, we know nothing about them here) <-> optimal thread count)
     int maxThreads = min((uint32_t)m_files->size(), getNumCPU());
-    //TODO remove
-    maxThreads = 1;
     if (!init(maxThreads)) //init here, for restart encoding. If Init in constructor- we have to reinit manually
     {
-        SIMPLE_LOGGER.showError("error in converter initialization.\n");
+        SIMPLE_LOGGER.showError("error in converter initialization.\n", 0);
         return;
     }
     m_currentFileName = m_files->begin();
@@ -108,7 +106,6 @@ void WAVFilesConverter::wait() {
 
 uint32_t WAVFilesConverter::getNumCPU() {
 #ifdef __MINGW64__
-    //TODO make get CPU count for windows
     long int numCPU = pthread_num_processors_np();
 #else
     //for linux
@@ -147,6 +144,10 @@ list<string>* WAVFilesConverter::sortFilesBySize(list<string> *files) {
     list<string>* out = new list<string>;
     for (multimap<uint32_t, string>::iterator itr = sizeAndNames.begin(); itr != sizeAndNames.end(); itr++){
         out->push_back(itr->second);
+    }
+
+    for (list<string>::iterator itr = out->begin(); itr != out->end(); itr++){
+        cout << *itr << endl;
     }
 
     return out;

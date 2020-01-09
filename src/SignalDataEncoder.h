@@ -12,6 +12,7 @@
 
 #include "lame/lame.h"
 #include "SimpleLogger.h"
+#include "FileHelper.h"
 
 using namespace std;
 

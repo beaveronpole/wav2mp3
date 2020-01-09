@@ -17,6 +17,7 @@
 #include <algorithm>
 
 #include "datareaders/datareaders.h"
+#include "FileHelper.h"
 
 
 //TODO think about PAD BYTE after chunk data. page 11, first standard
@@ -62,7 +63,7 @@ struct ChunkHeader{
 //struct helps to store the data about chunk position with chunk description
 struct ChunkHeaderDescription{
     ChunkHeader header;
-    int32_t pos; // position in file of chunk data begin
+    int64_t pos; // position in file of chunk data begin
 
     inline ChunkHeaderDescription():pos(0)
     {
@@ -176,9 +177,6 @@ private:
     // cursor is set on data of chunk
     ChunkHeaderDescription goToNextChunk(FILE *fd, bool fromCurrentPos = true, const string &name = "");
 
-    // function tries to open file
-    bool openWavFile(const string &fileName);
-
     // function returns total file size of given file descriptor
     uint64_t getFileSize(FILE* fd);
 
@@ -204,7 +202,7 @@ private:
     bool readFromFileWithCheck(FILE* fd, uint8_t* buffer, uint32_t dataSize);
 
     // helps to seek in a file with checking seek status
-    bool seekInFileWithCheck(FILE* fd, uint32_t seekSize, int __whence=SEEK_CUR);
+    bool seekInFileWithCheck(FILE* fd, uint32_t seekSize, int __whence= SEEK_CUR);
 
     WAVFileDescriptor m_wavFileDescr;
 

@@ -22,7 +22,8 @@ list<string> * FilesListMaker::makeFilesList(const string& directory) {
 #endif
             string gotFilePath(string(resolved) + PATH_SEPARATOR + string(ent->d_name));
             if (status == NULL){
-                SIMPLE_LOGGER.showError("Some error in reading file path for " + toStr(directory.c_str()) +" Continue...\n");
+                SIMPLE_LOGGER.showError(
+                        "Some error in reading file path for " + toStr(directory.c_str()) + " Continue...\n", 0);
                 continue;
             }
 
@@ -31,7 +32,7 @@ list<string> * FilesListMaker::makeFilesList(const string& directory) {
         closedir (dir);
     } else {
         /* could not open directory */
-        SIMPLE_LOGGER.showError("Error in opening directory : " + directory + "\n");
+        SIMPLE_LOGGER.showError("Error in opening directory : " + directory + "\n", 0);
     }
     return outList;
 }

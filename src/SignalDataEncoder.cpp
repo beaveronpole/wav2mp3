@@ -25,8 +25,7 @@ SignalDataEncoder::SignalDataEncoder(const string &outputFileName,
     m_mp3bufferSize_bytes = 1.25 * encodingChunkSize_samples + 7200; //some tail for sure
     m_mp3buffer = new uint8_t[m_mp3bufferSize_bytes];
 
-    m_fd = fopen(outputFileName.c_str(), "w");
-    if (m_fd == NULL){
+    if (FileHelper::open(outputFileName, &m_fd, "wb") != FileHelper::FILEHELPERSTATUS_OK){
         SIMPLE_LOGGER.addErrorLine("Error on creating output MP3 file with name = " + outputFileName + "\n");
     }
 }
@@ -41,10 +40,9 @@ int32_t SignalDataEncoder::putDataForEncoding(int32_t *dataLeft,
                                              m_mp3buffer,
                                              m_mp3bufferSize_bytes);
     if (encodedSize > 0) {
-        size_t status = fwrite(m_mp3buffer, encodedSize, 1, m_fd);
-        if (status != 1){
+        if (FileHelper::write(m_mp3buffer, encodedSize, &m_fd) != FileHelper::FILEHELPERSTATUS_OK){
             SIMPLE_LOGGER.addErrorLine("Error on writing output file.\n");
-            fclose(m_fd);
+            FileHelper::close(&m_fd);
             m_fd = NULL;
             return -1;
         }
@@ -58,15 +56,14 @@ int32_t SignalDataEncoder::finishEncoding() {
             m_mp3buffer, /* pointer to encoded MP3 stream         */
             m_mp3bufferSize_bytes);  /* number of valid octets in this stream */
     if (returnFlush > 0) {
-        size_t status = fwrite(m_mp3buffer, returnFlush, 1, m_fd);
-        if (status != 1){
+        if (FileHelper::write(m_mp3buffer, returnFlush, &m_fd) != FileHelper::FILEHELPERSTATUS_OK){
             SIMPLE_LOGGER.addErrorLine("Error on writing output file.\n");
-            fclose(m_fd);
+            FileHelper::close(&m_fd);
             m_fd = NULL;
             return -1;
         }
     }
-    fclose(m_fd);
+    FileHelper::close(&m_fd);
     return 0;
 }
 
