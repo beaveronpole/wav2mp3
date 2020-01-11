@@ -34,8 +34,6 @@ public:
     static FileHelperStatus seek(FILE **fd, uint32_t offset, int from);
     static FileHelperStatus tell(FILE **fd, int64_t *outPos);
     static FileHelperStatus fileSize(FILE **fd, uint32_t* result);
-    static FileHelperStatus fileTailFromCurrent(FILE **fd, uint32_t* tailSize);
-
 };
 
 
