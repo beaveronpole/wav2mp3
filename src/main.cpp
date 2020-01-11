@@ -11,7 +11,6 @@ int main(int argc, char** argv) {
     list<string>* filesList;
     if (argc > 1) {
         filesList = FilesListMaker::makeFilesList(argv[1]);
-//        FilesListMaker::printFilesList(filesList);
     }
     else{
         SIMPLE_LOGGER.showError(
@@ -40,6 +39,3 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
-//TODO joinable?
-//TODO path separator?
