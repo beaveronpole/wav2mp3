@@ -54,6 +54,7 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
     m_wavFileDescr.header.ck_id = chunkHeaderTmp.header;
     if (!isWAVEFile()) {
         m_status = WAVEFILEREADER_STATUS_FAIL;
+        SIMPLE_LOGGER.addErrorLine("File has not WAVE format data inside.\n");
         return;
     }
     chunkHeaderTmp = goToNextChunk(&m_wavFileDescr.fd, true, "fmt ");

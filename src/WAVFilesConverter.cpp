@@ -8,15 +8,14 @@ WAVFilesConverter* WAVFilesConverter::m_instance = NULL;
 
 WAVFilesConverter::WAVFilesConverter():
 m_files(NULL){
+    int status_mutex = pthread_mutex_init(&m_mutexCurrentFileNameIterator, NULL);
+    if (status_mutex != 0){
+        SIMPLE_LOGGER.showError("error on init mutex CurrentFileNameIterator in WAVFilesConverter.\n", 0);
+    }
 }
 
 bool WAVFilesConverter::init(uint32_t threadCount) {
     ConverterWorker* newWorker = NULL;
-    int status_mutex = pthread_mutex_init(&m_mutexCurrentFileNameIterator, NULL);
-    if (status_mutex != 0){
-        SIMPLE_LOGGER.showError("error on init mutex CurrentFileNameIterator in WAVFilesConverter.\n", 0);
-        return false;
-    }
     for (uint32_t i = 0; i < threadCount; i++){
         newWorker = new ConverterWorker(workerFinishCallBack);
         if (!newWorker->canWork()){
