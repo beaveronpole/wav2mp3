@@ -70,10 +70,12 @@ private:
     static void* loggerLoop(void* args);
 
     pthread_mutex_t m_mapsMutex;
+    int m_mutexStatus;
     map<pthread_t, string> m_threadStrings;
     map<pthread_t, string> m_threadErrorStrings;
     bool m_enable;
     pthread_t m_progressThread;
+    virtual ~SimpleLogger();
 };
 
 

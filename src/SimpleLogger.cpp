@@ -8,7 +8,8 @@ SimpleLogger* SimpleLogger::m_instance = NULL;
 
 SimpleLogger::SimpleLogger():
         available(false),
-        m_enable(true){
+        m_enable(true),
+        m_mutexStatus(-1){
     int status_mutex = pthread_mutex_init(&m_mapsMutex, NULL);
     if (status_mutex != 0){
         cerr << "error on init mutex SimpleLogger." << endl;
@@ -102,7 +103,7 @@ void SimpleLogger::flush() {
 }
 
 void *SimpleLogger::loggerLoop(void *args) {
-    sleep(1);
+//    sleep(1);
     SimpleLogger* object = (SimpleLogger*)args;
     uint32_t counter = 0;
     char chars[] = {'-', '\\','|','/'};
@@ -119,6 +120,14 @@ void *SimpleLogger::loggerLoop(void *args) {
 
 void SimpleLogger::wait() {
     pthread_join(m_progressThread, NULL);
+    delete m_instance;
+    m_instance = NULL;
+}
+
+SimpleLogger::~SimpleLogger() {
+    if (m_mutexStatus == 0){
+        pthread_mutex_destroy(&m_mapsMutex);
+    }
 }
 
 
