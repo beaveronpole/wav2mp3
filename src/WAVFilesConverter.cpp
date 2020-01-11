@@ -125,7 +125,7 @@ list<string>* WAVFilesConverter::sortFilesBySize(list<string> *files) {
     multimap<uint32_t, string, greater<uint32_t> > sizeAndNames;
     //this function doesnt think about files extension
     for (list<string>::iterator itr = files->begin(); itr != files->end(); itr++){
-        fd = fopen( (*itr).c_str(), "r" );
+        fd = fopen( (*itr).c_str(), "rb" );
         if (fd == NULL){
             continue;
         }

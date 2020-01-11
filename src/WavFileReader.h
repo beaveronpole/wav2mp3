@@ -175,10 +175,7 @@ private:
     // we can read chunk neatly, because of size 8 bytes
     // returns chunk header
     // cursor is set on data of chunk
-    ChunkHeaderDescription goToNextChunk(FILE *fd, bool fromCurrentPos = true, const string &name = "");
-
-    // function returns total file size of given file descriptor
-    uint64_t getFileSize(FILE* fd);
+    ChunkHeaderDescription goToNextChunk(FILE **fd, bool fromCurrentPos = true, const string &name = "");
 
     // checks if file has WAVE data
     bool isWAVEFile();
@@ -192,17 +189,8 @@ private:
     // simple calculator of samples per channel using local m_wavFileDescr
     uint32_t getSamplesPerChannel(uint32_t dataSize_bytes);
 
-    // checks if file has enough tail from a current position
-    bool hasFileEnoughDataForRead(size_t dataSize, FILE* fd);
-
     //return remain file size from a current position
-    uint64_t getFileTailSize_bytes(FILE* fd);
-
-    // helps to read different data types from file with checking available data size in file
-    bool readFromFileWithCheck(FILE* fd, uint8_t* buffer, uint32_t dataSize);
-
-    // helps to seek in a file with checking seek status
-    bool seekInFileWithCheck(FILE* fd, uint32_t seekSize, int __whence= SEEK_CUR);
+    uint64_t getFileTailSize_bytes();
 
     WAVFileDescriptor m_wavFileDescr;
 

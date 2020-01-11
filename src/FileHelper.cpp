@@ -14,7 +14,7 @@ FileHelper::FileHelperStatus FileHelper::open(const string &path, FILE **fd, con
 }
 
 FileHelper::FileHelperStatus FileHelper::close(FILE **fd) {
-    if (fclose(*fd) == 0){
+    if ( *fd==NULL || fclose(*fd) == 0 ){
         return FILEHELPERSTATUS_OK;
     }
     return FILEHELPERSTATUS_FAIL;

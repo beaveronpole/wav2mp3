@@ -14,6 +14,12 @@ WavFileReader::WavFileReader(const string &fileName):
     m_wavFileDescr.fileName = fileName;
     parseWAVFileHead(fileName);
 
+    //check is PCM
+    if (!m_wavFileDescr.hasPCMData || m_status == WAVEFILEREADER_STATUS_FAIL){
+        SIMPLE_LOGGER.addErrorLine("Unsupported file format in " + fileName + "\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
+        return;
+    }
     // if data in header unsupported - m_datareader will be NULL after call createDataReader
     m_datareader = WaveDataReaderCreator::createDataReader(m_wavFileDescr.header.descr.bitsPerSample,
                                                            m_wavFileDescr.hasFloatFormat);
@@ -22,7 +28,7 @@ WavFileReader::WavFileReader(const string &fileName):
         m_status = WAVEFILEREADER_STATUS_FAIL;
         return;
     }
-    m_datareader->init(m_wavFileDescr.fd, m_wavFileDescr.header.descr.channels,
+    m_datareader->init(&m_wavFileDescr.fd, m_wavFileDescr.header.descr.channels,
                        m_wavFileDescr.header.descr.bitsPerSample, getBytesPerSample());
 }
 
@@ -34,12 +40,12 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
     }
 
     if (FileHelper::fileSize(&m_wavFileDescr.fd, &(m_wavFileDescr.totalFileSize)) != FileHelper::FILEHELPERSTATUS_OK){
-        FileHelper::close(&m_wavFileDescr.fd);
         m_status = WAVEFILEREADER_STATUS_FAIL;
         return;
     }
 
-    chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, true);
+    chunkHeaderTmp = goToNextChunk(&m_wavFileDescr.fd, true);
+    if (m_status == WAVEFILEREADER_STATUS_FAIL) return;
     if (!chunkHeaderTmp.header.fourcc.check("RIFF")){
         SIMPLE_LOGGER.addErrorLine("File has not RIFF data inside.\n");
         m_status = WAVEFILEREADER_STATUS_FAIL;
@@ -50,15 +56,13 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
         m_status = WAVEFILEREADER_STATUS_FAIL;
         return;
     }
-    chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, true, "fmt ");
+    chunkHeaderTmp = goToNextChunk(&m_wavFileDescr.fd, true, "fmt ");
+    if (m_status == WAVEFILEREADER_STATUS_FAIL) return;
     m_currentChunkHeaderDescription = chunkHeaderTmp;
     getFormatDescription(chunkHeaderTmp.header);
-    if (!m_wavFileDescr.hasPCMData) {
-        m_status = WAVEFILEREADER_STATUS_FAIL;
-        return;
-    }
-
-    chunkHeaderTmp = goToNextChunk(m_wavFileDescr.fd, true, "data");
+    if (m_status == WAVEFILEREADER_STATUS_FAIL) return;
+    chunkHeaderTmp = goToNextChunk(&m_wavFileDescr.fd, true, "data");
+    if (m_status == WAVEFILEREADER_STATUS_FAIL) return;
     m_currentChunkHeaderDescription = chunkHeaderTmp;
     // check if file size more than size in chunk
     if (chunkHeaderTmp.header.size == 0){ // no data
@@ -67,7 +71,7 @@ void WavFileReader::parseWAVFileHead(const string &fileName) {
     }
     m_readDataSizeOfCurrentChunk_bytes = 0;
     m_wavFileDescr.sampleSize_bytes = getBytesPerSample();
-    uint32_t fileTailSize_bytes = getFileTailSize_bytes(m_wavFileDescr.fd);
+    uint32_t fileTailSize_bytes = getFileTailSize_bytes();
     m_wavFileDescr.samplesPerChannelInCurrentChunk = getSamplesPerChannel(chunkHeaderTmp.header.size > fileTailSize_bytes ? fileTailSize_bytes : chunkHeaderTmp.header.size);
 }
 
@@ -84,7 +88,11 @@ bool WavFileReader::isWAVEFile() {
 void WavFileReader::getFormatDescription(ChunkHeader chunkHeader) {
     //we are at fmt chunk
     m_wavFileDescr.header.ck_fmt = chunkHeader;
-    //read chunk.size data! not sizeof(WAVEFormat) because in this case it is OK
+    if (chunkHeader.size > sizeof(m_wavFileDescr.header.descr)){ //unknown format!
+        SIMPLE_LOGGER.addErrorLine("Error in reading file " + toStr(m_wavFileDescr.fileName) + "\n");
+        m_status = WAVEFILEREADER_STATUS_FAIL;
+        return;
+    }
     if (FileHelper::read((uint8_t*)&(m_wavFileDescr.header.descr),
                          chunkHeader.size,
                          &m_wavFileDescr.fd) != FileHelper::FILEHELPERSTATUS_OK) {
@@ -135,11 +143,11 @@ uint32_t WavFileReader::getSamplesPerChannel(uint32_t dataSize_bytes) {
     return dataSize_bytes / m_wavFileDescr.header.descr.channels / m_wavFileDescr.sampleSize_bytes;
 }
 
-ChunkHeaderDescription WavFileReader::goToNextChunk(FILE *fd, bool fromCurrentPos, const string &name) {
+ChunkHeaderDescription WavFileReader::goToNextChunk(FILE **fd, bool fromCurrentPos, const string &name) {
     ChunkHeaderDescription out;
     //put position on end of current chunk
     if (!fromCurrentPos){
-        if (FileHelper::seek(&fd, m_currentChunkHeaderDescription.pos +
+        if (FileHelper::seek(fd, m_currentChunkHeaderDescription.pos +
                                  m_currentChunkHeaderDescription.header.size, SEEK_SET) != FileHelper::FILEHELPERSTATUS_OK){
             m_status = WAVEFILEREADER_STATUS_FAIL;
             return out;
@@ -147,8 +155,8 @@ ChunkHeaderDescription WavFileReader::goToNextChunk(FILE *fd, bool fromCurrentPo
     }
 
     do {
-        if (FileHelper::read((uint8_t *)&(out.header), sizeof(ChunkHeader), &fd) == FileHelper::FILEHELPERSTATUS_OK){
-            if (FileHelper::tell(&fd, &(out.pos)) != FileHelper::FILEHELPERSTATUS_OK){
+        if (FileHelper::read((uint8_t *)&(out.header), sizeof(ChunkHeader), fd) == FileHelper::FILEHELPERSTATUS_OK){
+            if (FileHelper::tell(fd, &(out.pos)) != FileHelper::FILEHELPERSTATUS_OK){
                 out.header.size = 0;
                 return out;
             }
@@ -156,7 +164,7 @@ ChunkHeaderDescription WavFileReader::goToNextChunk(FILE *fd, bool fromCurrentPo
                 return out;
             }
             else{ //name is not correct, seek size, and go again
-                if (FileHelper::seek(&fd, out.header.size, SEEK_CUR) != FileHelper::FILEHELPERSTATUS_OK){ //if error on seek- return chunk with size == 0
+                if (FileHelper::seek(fd, out.header.size, SEEK_CUR) != FileHelper::FILEHELPERSTATUS_OK){ //if error on seek- return chunk with size == 0
                     m_status = WAVEFILEREADER_STATUS_FAIL;
                     break;
                 }
@@ -172,9 +180,9 @@ ChunkHeaderDescription WavFileReader::goToNextChunk(FILE *fd, bool fromCurrentPo
     return out;
 }
 
-uint64_t WavFileReader::getFileTailSize_bytes(FILE *fd) {
+uint64_t WavFileReader::getFileTailSize_bytes() {
     int64_t filePos;
-    if (FileHelper::tell(&fd, &filePos) != FileHelper::FILEHELPERSTATUS_OK){
+    if (FileHelper::tell(&m_wavFileDescr.fd, &filePos) != FileHelper::FILEHELPERSTATUS_OK){
         SIMPLE_LOGGER.addErrorLine("Error on get file tail size.\n");
         m_status = WAVEFILEREADER_STATUS_FAIL;
         return 0;
@@ -209,6 +217,7 @@ void WavFileReader::getData(vector<vector<int32_t> *> *buf, uint32_t size_sample
 WavFileReader::~WavFileReader() {
     if (m_wavFileDescr.fd) {
         FileHelper::close(&m_wavFileDescr.fd);
+        m_wavFileDescr.fd = NULL;
     }
     delete m_datareader;
 }

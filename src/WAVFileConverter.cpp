@@ -53,15 +53,13 @@ void WAVFileConverter::processFile(const string &fileName) {
 
     //create file reader
     m_reader = new WavFileReader(fileName); // if it throws bad_alloc - we can nothing to do, and will exit the app...
-    WAVFileDescriptor WAVFileInfo = m_reader->getFileInfo();
-    //check RIFF
-    if (!WAVFileInfo.header.ck_id.fourcc.check("RIFF")){
-        //not RIFF format
+    if (m_reader->status() != WavFileReader::WAVEFILEREADER_STATUS_OK){
         SIMPLE_LOGGER.flush();
         delete m_reader;
         m_reader = NULL;
         return;
     }
+    WAVFileDescriptor WAVFileInfo = m_reader->getFileInfo();
 
     //get file name-> make MP3 file name
     string outMP3FileName = makeMP3FileName(fileName);

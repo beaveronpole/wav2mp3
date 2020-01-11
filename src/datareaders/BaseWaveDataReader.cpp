@@ -12,7 +12,7 @@ BaseWaveDataReader::BaseWaveDataReader():
 {
 }
 
-void BaseWaveDataReader::init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample, uint32_t bytesPerSample) {
+void BaseWaveDataReader::init(FILE **fd, uint32_t channelsCount, uint32_t bitsPerSample, uint32_t bytesPerSample) {
     m_bitsPerSample = bitsPerSample;
     if (m_bitsPerSample < 2){
         SIMPLE_LOGGER.addErrorLine("Error in sample size.\n");
@@ -25,7 +25,7 @@ void BaseWaveDataReader::init(FILE *fd, uint32_t channelsCount, uint32_t bitsPer
 }
 
 uint32_t BaseWaveDataReader::getData(vector<vector<int32_t>* >* buf, uint32_t size_samples) {
-    if (m_fd == NULL || m_channelsCount == 0){
+    if (*m_fd == NULL || m_channelsCount == 0){
         SIMPLE_LOGGER.addErrorLine("Error on get data. Data reader is not initialized.\n");
         return 0;
     }
@@ -34,7 +34,7 @@ uint32_t BaseWaveDataReader::getData(vector<vector<int32_t>* >* buf, uint32_t si
     uint32_t sizeForReading_bytes = size_samples * m_channelsCount * m_bytesPerSample;
     m_rawBuffer.reserve(sizeForReading_bytes);
     //read from file available data
-    if (FileHelper::read(m_rawBuffer.data(), sizeForReading_bytes, &m_fd) != FileHelper::FILEHELPERSTATUS_OK){
+    if (FileHelper::read(m_rawBuffer.data(), sizeForReading_bytes, m_fd) != FileHelper::FILEHELPERSTATUS_OK){
         return 0;
     }
     //subclass virtual function

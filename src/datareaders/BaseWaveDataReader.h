@@ -24,7 +24,7 @@ using namespace std;
 class BaseWaveDataReader {
 public:
     explicit BaseWaveDataReader();
-    void init(FILE *fd, uint32_t channelsCount, uint32_t bitsPerSample, uint32_t bytesPerSample);
+    void init(FILE **fd, uint32_t channelsCount, uint32_t bitsPerSample, uint32_t bytesPerSample);
 
     // interface function try to get data of size_samples (in samples, converts to bytes inside) from a file
     uint32_t getData(vector<vector<int32_t> *>* buf, uint32_t size_samples) ;
@@ -36,7 +36,7 @@ protected:
     // casts all data types to int32 -> then int32 goes to lame function
     virtual void fillDataStorage(vector<uint8_t> *rawBuf, uint32_t rawBufDataSize, vector<vector<int32_t> *> *out) = 0;
 
-    FILE* m_fd;
+    FILE** m_fd;
     uint32_t m_channelsCount;
     uint32_t m_bitsPerSample;
     uint32_t m_bytesPerSample;
