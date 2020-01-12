@@ -21,15 +21,16 @@ This is a project for the task:
 # Description
 The project contains WAV file parser for data types:
 - unsigned integer 8 bit
+- signed integer 12 bit
 - signed integer 16 bit
 - signed integer 24 bit
 - signed integer 32 bit
 - float 32 bit
 - float 64 bit
 
-*It should work for unsigned 2..7 bit data, and signed 9..31 data, but i have no files to check.*
+*It should work for unsigned 2..7 bit data, and signed 9..31 data too.*
 
-Converter works for files with format: `RIFF('WAVE' <fmt(PCM|FLOAT)>,...,<wave-data>)`
+Converter works for files with mono/stereo format: `RIFF('WAVE' <fmt(PCM|FLOAT)>,...,<wave-data>)`
 
 To start encoding we should run the program with args like: `wav2mp3 ./directory_with_wav_files`
 
@@ -52,6 +53,8 @@ The project build system is CMake.
 *A profiler was used, but the most part of runtime is used by Lame-> so code optimization is unreasonable.*
 
 In the project release section there are built binaries of project for Windows and Linux, but it may not work on every system, and should be rebuilt for a concrete system. Attached binaries are built with static linking, so they should work well without any additional stuff. But the cygwin build needs `cygwin1.dll`.
+
+In `./testfiles` directory are some files for tests.
 
 #### Build on Windows with CygWin:
 
