@@ -49,6 +49,7 @@ private:
     pthread_t m_workerThread;
     pthread_cond_t m_startConvertingCondition;
     pthread_mutex_t m_startConvertingMutex;
+    pthread_mutexattr_t m_startConvertingMutex_attr;
     bool m_threadActive;
     string m_processFileName;
 

@@ -18,21 +18,20 @@ ConverterWorker::ConverterWorker(void (*finishCallBack)(uint32_t)):
 bool ConverterWorker::initPthread() {
     m_threadActive = true;
 
-    pthread_mutexattr_t Attr;
-    int status_attr = pthread_mutexattr_init(&Attr);
+    int status_attr = pthread_mutexattr_init(&m_startConvertingMutex_attr);
     if (status_attr != 0){
         SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex) 0.\n", 0);
         return false;
     }
 
     // we have to make mutex recursive, because we can call function start from the same thread
-    int status_set_attr = pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
+    int status_set_attr = pthread_mutexattr_settype(&m_startConvertingMutex_attr, PTHREAD_MUTEX_RECURSIVE);
     if (status_set_attr != 0){
         SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex) 1.\n", 0);
         return false;
     }
 
-    int status_mutex = pthread_mutex_init(&m_startConvertingMutex, &Attr);
+    int status_mutex = pthread_mutex_init(&m_startConvertingMutex, &m_startConvertingMutex_attr);
     if (status_mutex != 0){
         SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex) 2.\n", 0);
         return false;
@@ -101,5 +100,6 @@ ConverterWorker::~ConverterWorker() {
     // pthread_condition is not waiting, mutex is unlocked, thread is finished
     pthread_mutex_destroy(&m_startConvertingMutex);
     pthread_cond_destroy(&m_startConvertingCondition);
+    pthread_mutexattr_destroy(&m_startConvertingMutex_attr);
     delete m_converter;
 }
