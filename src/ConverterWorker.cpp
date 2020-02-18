@@ -18,9 +18,23 @@ ConverterWorker::ConverterWorker(void (*finishCallBack)(uint32_t)):
 bool ConverterWorker::initPthread() {
     m_threadActive = true;
 
-    int status_mutex = pthread_mutex_init(&m_startConvertingMutex, NULL);
+    pthread_mutexattr_t Attr;
+    int status_attr = pthread_mutexattr_init(&Attr);
+    if (status_attr != 0){
+        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex) 0.\n", 0);
+        return false;
+    }
+
+    // we have to make mutex recursive, because we can call function start from the same thread
+    int status_set_attr = pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
+    if (status_set_attr != 0){
+        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex) 1.\n", 0);
+        return false;
+    }
+
+    int status_mutex = pthread_mutex_init(&m_startConvertingMutex, &Attr);
     if (status_mutex != 0){
-        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex).\n", 0);
+        SIMPLE_LOGGER.showError("error on init thread ConverterWorker (mutex) 2.\n", 0);
         return false;
     }
     int status_cond = pthread_cond_init(&m_startConvertingCondition, NULL);
@@ -40,7 +54,9 @@ bool ConverterWorker::initPthread() {
 
 void ConverterWorker::start(const string &fileName) {
     //send signal to start the function
+    pthread_mutex_lock(&m_startConvertingMutex);
     m_processFileName = fileName;
+    pthread_mutex_unlock(&m_startConvertingMutex);
     pthread_cond_signal(&m_startConvertingCondition);
 }
 
