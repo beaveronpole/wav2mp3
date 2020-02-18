@@ -55,8 +55,8 @@ void ConverterWorker::start(const string &fileName) {
     //send signal to start the function
     pthread_mutex_lock(&m_startConvertingMutex);
     m_processFileName = fileName;
-    pthread_mutex_unlock(&m_startConvertingMutex);
     pthread_cond_signal(&m_startConvertingCondition);
+    pthread_mutex_unlock(&m_startConvertingMutex);
 }
 
 void* ConverterWorker::workerFunction(void* args) {
